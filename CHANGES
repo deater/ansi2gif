@@ -39,8 +39,8 @@
   Should make it configurable.  It is hard going back on code this old to 
   work with it.
   
-2003
-+ Split off png package
 
 18 October 2004
-+ Fix some buffer overrun bugs from ansi2gif
++ Tried to get animated gifs to go faster.  Not possible very easily :(
++ Fixed a few buffer overuns that either crashed or skipped the first char.
+
