@@ -1,0 +1,6 @@
+-- autoconf configuration script?
+-- native HPGL/postscript?
+-animate flag
+If animate, either pre-process or assume 80x25
+w/o animate, just overwrite and give final result
+-enable_blink... animated gif alternating between

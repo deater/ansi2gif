@@ -1,0 +1,16 @@
+Begin3
+Title:        Fontprint for Linux           
+Version:      3.0.3
+Entered-date: 11SEP98   
+Description:  Print text files using standard VGA/linux console fonts    
+Keywords:     vga font print printer console fonts       
+Author:       weave@eng.umd.edu (Vincent Weaver)         
+Maintained-by:weave@wng.umd.edu (Vincent Weaver)  
+Primary-site: sunsite.unc.edu /pub/Linux/utils/text  
+              25Kb fprint-3.0.3.tar.gz
+Alternate-site: http://www.glue.umd.edu/~weave/vmwprod
+Alternate-site: http://www.vince.weaver.org/vmwprod
+Original-site:  
+Platform: Linux, other with gcc compiler 
+Copying-policy: GPL
+End

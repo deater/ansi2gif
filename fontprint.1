@@ -1,0 +1,124 @@
+.\" Copyleft, this document is freely distributable
+.TH fontprint 1 "9 March 1998" "Linux"
+.SH NAME
+fontprint \- convert a text file to Epson(TM) graphics or GIF 
+using an 8 by 16 screen font.
+
+.SH SYNOPSIS
+fontprint
+.I font_file
+[
+.I text_file
+] [
+.I output_file
+] [
+.I -n
+] [
+.I -w
+] [
+.I -gif
+] [
+.I -h
+] [
+.I -v
+]
+
+.SH DESCRIPTION
+An EGA/VGA font file contains bit images of characters.  
+Fontprint uses this material to create a graphics image of each line from
+.I text_file.  
+The result is combined with the control characters that
+enable an Epson(TM) printer or clone to print the line.
+Optionally, the result may be formatted as a GIF file.
+
+.SH OPTIONS
+.TP
+.B " font_file "
+the name of a file containing a 16 by 8 screen font.
+
+.TP
+.B " text_file "
+the name of the text file you wish to print. 
+If not given, standard input and output are used.
+
+.TP
+.B " output_file "
+the name of a file where the output will be placed. 
+If not given, standard output is used.
+
+.TP
+.B " -n "
+Eliminate extra spaces added between each character.
+
+.TP
+.B " -w "
+Print in extra-wide mode.
+
+.TP
+.B " -gif "
+Output gif file instead of raw printer output.
+
+.TP
+.B " -v "
+Print version information and exit.
+
+.TP
+.B " -h "
+Print help information and exit.
+
+.SH EXAMPLE
+.TP
+The command
+fontprint medieval.fnt file.txt output
+
+.LP
+will print the file "file.txt" to an output file "output"
+using the font "medieval.fnt".
+
+.TP
+Then use the command:
+lpr output
+
+.LP
+to send the results to your Epson compatible printer
+(assuming that it is the default printer, 
+if not see the -P option of lpr(1) ).
+
+.LP
+The above steps may be combined within a pipe.  
+.I fontprint
+may even by used inside a print filter, see printcap(1).
+However, such a filter must not be allowed to modify
+the output from fontprint just in case a bit pattern
+within a graphic sequence matches anything that the
+filter would change as if it were text. 
+
+.SH NOTES
+.TP
+Sample fonts are bundled with fontprint.
+
+.LP
+Some of the fonts in the Linux kbd package are suitable,
+specifically the 8x16 by 256 character fonts 
+including those with the .psf extension.
+
+.SH LIMITATIONS
+.LP
+Only 8x16 fonts are supported.  
+If you use the standard 80x25 screen resolution, 
+this limitation will not be a problem.  
+This font size corresponds to the standard screen of most EGA/VGA cards.
+
+.LP
+Line length is limited to 80 characters.
+
+.LP
+Control codes are printed as the corresponding character in the
+font file.  If your file contains TABs, it may be piped through
+expand(1); 
+other control codes may need stronger measures such as tr(1).
+   
+.SH "SEE ALSO"
+lpr(1), printcap(1)
+
+

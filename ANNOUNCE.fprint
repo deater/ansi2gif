@@ -1,0 +1,38 @@
+/*--------------------------------------------------------------------------*\
+ FPRINT 3.0.3 -- Print Text Files Using VGA Console Fonts - 11 September 1998
+     by Vince Weaver (weave@eng.umd.edu, http://www.glue.umd.edu/~weave )
+\*--------------------------------------------------------------------------*/
+
+DESCRIPTION
+  -- lets you print text using standard Linux VGA console fonts
+  
+FEATURES
+  -- Output directly to EPSON dot matrix printer
+  -- Output to gif file [using gd lib], and from there can print
+     using any number of other utilities [xv, netscape]
+     
+USES [instructions included]
+  -- Print text exactly as it appears on the console.
+  -- Print using your foreign language font
+  -- Create a cgi-bin program to do this on the web
+
+NEW IN VERSION 3.0.0:
+  -- Improved Documentation
+  -- Converted from Pascal to C
+ 
+NEW IN VERSION 3.0.2:
+  -- psf font support
+  -- works correctly in printer mode
+ 
+-------------------------------------------------------------------------
+WHERE TO GET Font Print
+-------------------------------------------------------------------------
+  http://www.glue.umd.edu/~weave/vmwprod/
+  http://www.vince.weaver.org/vmwprod/
+  http://sunsite.unc.edu/pub/Linux/utils/text/fprint-3.0.3.tar.gz
+  
+Check out other programs by me at http://www.glue.umd.edu/~weave/vmwprod
+
+-------
+Vince
+weave@eng.umd.edu
