@@ -1,5 +1,5 @@
 ##############################################################
-#  Makefile for Fontprint 3.0.3 -- by Vince Weaver           #
+#  Makefile for ansi2gif 0.9.9 -- by Vince Weaver            #
 #                                                            #
 #  To modify for your configuration, add or remove the #     #
 #                                                            #
@@ -8,14 +8,20 @@
 #Your compiler.  If gcc doesn't work, try CC
 CC = gcc
 
-#For Linux
-PLATFORM = 'Linux'
-C_OPTS = -O2 -Wall  -DMAKE_GIF
+#You need the "gd" gif library, available from 
+# http://www.boutell.com/gd/
+#
+# Either install it, or else point the options below to point to the location
+# of the library and include files.
+#GD_L_OPTS = -L/usr/lib 
+#GD_C_OPTS = -I/usr/include
 
-#If You want GIF support, and you have installed the gd library
-# [see README] then uncomment the following.
+#Standard compiler and library options
 
-L_OPTS = -lgd -lm
+C_OPTS = $(GD_C_OPTS) -O2 -Wall
+ 
+L_OPTS = $(GD_L_OPTS) -lgd -lm
+
 
 # DO NOT EDIT BELOW THIS LINE
 
@@ -33,7 +39,7 @@ ansi2gif:	ansi2gif.o whirlgif.o gifdecod.o gifencod.o gifdecod.o
 	$(CC) -o ansi2gif ansi2gif.o whirlgif.o gifencod.o gifdecod.o $(L_OPTS)
 	@strip ansi2gif
 
-whirgif.o:	whirlgif.c
+whirlgif.o:	whirlgif.c
 	$(CC) $(C_OPTS) -c whirlgif.c
 	
 gifdecod.o:	gifdecod.c
@@ -44,9 +50,3 @@ gifencod.o:	gifencod.c
 
 ansi2gif.o:	ansi2gif.c
 	$(CC) $(C_OPTS) -c ansi2gif.c 
-
-font2include:	font2include.o
-	$(CC) -o font2include font2include.o 
-	
-font2include.o:	font2include.c
-	$(CC) $(C_OPTS) -c font2include.c

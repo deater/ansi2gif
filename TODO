@@ -1,6 +1,7 @@
--- autoconf configuration script?
--- native HPGL/postscript?
--animate flag
-If animate, either pre-process or assume 80x25
-w/o animate, just overwrite and give final result
--enable_blink... animated gif alternating between
++ a default font with IBM extended ASCII codes more suitable for ANSI art.
++ color-map settable from command line
++ automatic sizing of output gif based on ansi
+
+Far-Out-There
++ Scrolling animated gif.  I.e. simulate the console when y>y_size
+

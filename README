@@ -1,274 +1,143 @@
-*****************  FONTPRINT version 3.0.3  **************
-*****************                           **************
+*****************  ansi2gif version 0.0.9  ***************
+*****************                          ***************
                       by Vince Weaver
                          weave@eng.umd.edu
+			    http://www.ee.umd.edu/~weave
 			 
 Requirements:  Designed for Linux, but any platform with gcc will probably 
                work.
 
-Files Included:
-
-      fontprint.c      ---   Source 
-      fontprint.pp     ---   old 2.5.1 source in pascal
-      future.fnt      \
-      medieval.fnt      ---   VGA Fonts.  Can be obtained many places, and
-      marie.fnt       /       a font editor can be obtained at the SIMTEL
-                              software archives.
-      README            ---   This File
-
-      Anyway these seem to be used mainly in foreign countries.
-      To see if you have them, try typing 'setfont medieval.fnt'
-      in the directory this was unpacked into.  If the font
-      changes, then you have it installed.
-      
-      You don't need the package to use this utility; it just lets
-      you see beforehand what the fonts look like.  I have
-      included three fonts; if you installed with the font option
-      the /usr/lib/kbd/consolefonts/ directory.
-      
 -------------------------------------------------------------------------     
  HISTORY
 -------------------------------------------------------------------------
 
-      A friend of mine [who later ended up becoming my girlfriend] liked
-      using elfin writing from J.R.R. Tolkien's books to write things.
-      [the font is contained in this distribution as "marie.fnt"]
+      I was thinking of extending my "fontprint" program to make it 
+      work better with gif output.  But then I thought, if I am going
+      to do that, why not make it so it can print colors?  And well
+      I went overboard, one thing led to another, and here is ansi2gif.
       
-      Anyway for Christmas I made her a program that could print files
-      using this font.  It was written in Turbo Pascal 5.0, and only
-      ran under DOS.  It was very primitive, but did its job.
-      I developed it using the manual for my Panasonic KX-1123 printer.
-
-      People [mainly from Europe] sent me patches and comments.
-      Jiri Kuchta of the Czech republic re-did the code to let it
-      take command-line parameters.
+      I decided to leave "fontprint" behind, because it does its job 
+      well.  ansi2gif is specialized, and while it shares some code, it
+      is a completely different program.
       
-      With the advent of the FPK freeware pascal compiler for Linux I was 
-      able to easily port it into Linux.  And there it stood for a while.
-      
-      Finally I totally re-wrote the code and translated it to C.  It has
-      been more than 3 years since I originally wrote the program and I have
-      learned a lot since then.  It can now output gif files, and in general
-      is a lot cleaner than the old dos version.
+      The included example_ansi's are ones I drew myself back in the
+      period of 1992-1996 or so.  My friends Jason Grimm and John Clemens
+      ran a WWIV BBS called "Utopia".  The BBS no longer exists, please
+      do not try to call.  I made about 100 different ANSI's, mostly
+      animations.  But since the resulting gif's end up being about 100K
+      a piece, I have no room to upload them all, sorry.....
       
 -------------------------------------------------------------------------
-BACKGROUND
+HOW IT WORKS
 -------------------------------------------------------------------------
 
-     The VGA cards on ix86 clones let you load arbitrary fonts for the
-     text mode.  These fonts are actually often leftover Hercules fonts
-     [that takes you back many years].  In any case the font files are
-     usually 4k, and basically hold info for what each character should
-     look like.
+     Basically I built an "ANSI" escape-code interpreter using a reference
+     someone sent me once while I was working on linux_logo.
      
-     Many utilities for creating/loading these fonts are available for
-     dos.  You can find them at the simtel dos archive.
+     Then I used Tom Boutell's [http://www.boutell.com] excellent "gd"
+     gif library to make the basis gif's.
      
-     For Linux, you can find utilities for Unix fonts at
-        http://sunsite.unc.edu/pub/Linux/system/keyboards
+     I used a slightly modified version of the "whirlgif" utility to 
+     do the animations.  [http://www.danbbs.dk/~dino/whirlgif]
+
+     A temporary file is created in /tmp/ansi2gif_%i.gif [where %i is
+     the pid of ansi2gif] in which all the transitory gifs for an
+     animation are made.
+
+     The fonts used are standard "vga" fonts.  Basically they are just
+     4k files holding a set of 256x8x16 data, where there are 256 characters,
+     16 lines, and then each line is reperesented as a 8bit character.  The
+     8 bit character, in binary, tells what bits to turn on and off to make
+     an 8x16 font.  
      
-     Slackware lets you install these fonts as an option.  If you chose it,
-     Try entering where you unpacked fprint any type 'setfont medieval.fnt'
-     If everything is set up properly your font should look, well, medieval.
-     
-     You don't need the Linux font programs to use the fprint utility;
-     they come in handy when previewing what a font will look like.
-     
-     At least on slackware more fonts and utilities can be found in the
-     /usr/lib/kbd/consolefonts/ directory.
-
-By: B.K. Bratkovic <bkbratko@ardu.raaf.defence.gov.au>
-
-------------------------------------------------------------------------
-FONT FILES  [Contributed by B.K. Bratkovic] 
-------------------------------------------------------------------------
-
-If the kbd package is installed on your Linux PC, you will find a fine
-collection of screen fonts in the directory:
-
-	/usr/lib/kbd/consolefonts
-
-Some of these are psf files and can be identified as such by the 
-file(1) command - more about these later.   Others use names that
-represent the style of font they hold, often suffixed by a resolution
-such as "8x8", "8x14" or "8x16"; file(1) reports these as just "data".  
-Most of these files can be loaded into the hardware of the PC EGA card, 
-see setfont(1).
-
-Fontprint uses fonts based on the 8x16 bit map.  This corresponds to the
-standard 80x25 screen resolution.  One can usually tell if a given file
-is right for fontprint by looking at its size.  Eight bit bytes
-can be used to represent a total of 256 characters: each 8x16 bit cell
-uses 16 bytes and 256 of these are 4096 bytes.  Go to the consolefonts
-directory, look for the magic number 4096 in the length field of ls -l 
-and the files that you find are almost certainly suitable fonts.   
-
-The consolfonts directory contains a number of .psf files. Read all 
-about these in psffiles.doc located in the same directory.  As
-documented, these differ from plain font files by exactly 4 bytes.
-However, some of these contain more than 256 characters (and are 
-usually used with Unicode aware applications).  Those that are exactly
-4100 bytes long (ie 4096+4) may be used with fontprint. 
-
-Some psf files contain a translation table (this can be stripped out with 
-psfstriptable(1) ).  If the application that you use to produce text files
-uses a font with such a table, you may get confusing output from fontprint.  
-Briefly: the translation table maps character codes (sometimes 16 or 24 
-bits long) into pointers within the font map; fontprint assumes a trivial
-one to one relation between character value and font map offset.
-
 ------------------------------------------------------------------------
 INSTALLING
 ------------------------------------------------------------------------
 
+    Get the "gd" utility from http://www.boutell.com/gd/
+    Install it.
+
+    Now install ansi2gif
+    
     Uncompress the file 
-       tar -xzvf fprint-3.0.3.tar.gz
+       tar -xzvf ansi2gif-0.9.9.tar.gz
        
     Enter the created directory
-       cd fprint-3.0.3
+       cd ansi2gif-0.9.9
        
-    Edit the makefile.  If you want to create gif files you need to get
-    the gd gif library from http://www.boutell.com/gd/ and then
-    uncomment the appropriate lines in the Makefile.
-    Be sure to copy the gd.h and libgd.so or libgd.a files to a place
-    gcc can find them [/usr/local/include and /usr/local/lib 
-    respectively] and do a "ldconfig" as root to be sure everything
-    links right.
-
+    The Makefile should be OK.  If you have "gd" installed in a 
+    non-standard directory, you might have to edit the makefile to
+    tell it where you have the gd libraries installed.
+    
     Compile the program
        make
        
     Copy the program to where binaries are kept.
        make install
-    Is the same as 'cp fontprint /usr/local/bin'
+    Is the same as 'cp ansi2gif /usr/local/bin'
     
     That's it!  It should be all installed!
-
-    [note... I include the old FPK pascal source.  I don't tell how
-     to use it though.  If you really want to compile the pascal 
-     version, check out http://www.brain.uni-freiburg.de/~klaus/fpk-pas/]
      
 ---------------------------------------------------------------------
 USAGE
 ---------------------------------------------------------------------
 
-The implementation of fontprint has completely changed since version
-2.5.1.  More options have been added and the old ones were re-named.  This
-is mainly to reflect that it is now a unix utility, not a DOS one anymore.
-
-Linux FontPrint v 3.0.3 by Vince Weaver (weave@eng.umd.edu)
-
- fontprint font_file [text_file] [output_file] [-n] [-w] [-gif] [-h] [-v]
- 
-    font_file   : standard VGA font to use, usually 4096 bytes long
-    text_file   : The text file you wish to print
-    output_file : The file where the output is to be placed.
-    -n          : Eliminate extra spaces added between each character
-    -w          : Print in "extra-wide" mode
-    -gif        : Output gif file instead of raw printer output
-    -v          : Print version information
-    -h          : Show this help information
-			 
-    Basically, to use it just type
-       "fontprint medieval.fnt file.txt output.out"
-    
-    This will print the file "file.txt" to an output file "output.out"
-    using the font "medieval.fnt".
-    
-    This output.out file is an escaped-Epson printer file.  If you have
-    a compatible printer, you can just send it to the printer.
-    For example, "cat output.out > /dev/lp1" will send it to your printer 
-    if its hooked onto lp1.
-    
-    Theoretically one could just do a "fontprint it.fnt file.txt /dev/lp1"
-    and print directly.  I have never tried this before.
-    
-    You can also ignore the input and output options and have the program
-    read from stdin and stdout.  For example 
-       "fontprint medieval.fnt < file.txt > output.out" 
-    should generate the same output as the original example given above.
-
-
-    IF YOU DON'T HAVE AN EPSON COMPATIBLE PRINTER:
-       
-       Don't worry!  Just get the gd gif library as described in the
-       INSTALLING section.  With that compiled in, you can create gif files!
-       Just add the '-gif' option and away you go.
-       
-       fontprint medieval.fnt input.txt output.gif -gif
+ ansi2gif [--animate] [--blink] [--color X=0xYYYYYY]
+          [--font fontfile] [--help] [--version] [--timedelay T]
+	  [--xsize X] [--ysize Y] input_file output_file
+		     
+       --animate          : Create an animated gif if an animated ansi
+       --blink            : Create an animated gif enabling blinking
+       --color X=0xRRGGBB : Set color "X" [0-16] to hex value RRGGBB [a number]
+       --font fontfile    : Use vgafont "filename" to create gif
+       --help             : show this help
+       --timedelay T      : Delay T 100ths of seconds between each displayed
+                            character in animate mode.
+       --version          : Print version information
+       --xsize X          : Make the output X characters wide
+       --ysize Y          : Make the output Y characters long.
+                            use "auto" to figure out on the fly.
       
-       Will create "output.gif" of your text in the specified font.
-       You can use any gif viewer [xv, ImageMagick converter, or even 
-       netscape] and print to your printer using that program.
-       
-       You can even use this gif utility to have a web-page cgi-program
-       to convert fonts on-line [I have done this].
-       
-      
---------------------------------------------------------------------------
-TROUBLESHOOTING
-__________________________________________________________________________
+    Instead of the long option, a single dash and the first letter of the
+    option may be substituted.  That is, "-a" instead of "--animate"
 
-     This program produces output that works on Epson compatible dot
-     matrix printers.  If when trying to use it, you just get pages
-     of garbage, your printer does not support Epson graphics escape
-     characters.  Try outputting using the GIF option and using a separate
-     program to print this gif.
-
-          This program has been tested on the following:
-               A PANASONIC-1123 24 pin dot matrix printer
-               A STAR 9 pin dot matrix.
-               A Cannon Bubble-jet printer
-
-               If you can or cannot get it to work on a certain
-                  printer, e-mail me so I'll know
-
-      I am currently at college with no access to a dot-matrix printer.
-      I have checked to make sure the current output is consistent with
-      the old pascal version; however I can't verify exact output.  Please
-      e-mail me if you have problems.
-
----------------------------------------------------------------------------
-THEORY
----------------------------------------------------------------------------
-
-       The VGA fonts are long files on Hexadecimal (base 16) data.
-       If the hexadecimal data is written out in binary, the 0's and
-       1's will show the font.  For example
-
-           00 =     00000000   If you look closely, you can see this
-           00 =     00000000   is a crude 'O' shape.  The VGA fonts
-           7E =     01111110   are in an 8x16 binary array.  The printer
-           42 =     01000010   accepts data in 8 item long columns.  To
-           42 =     01000010   get the fonts to print, the font is loaded
-           42 =     01000010   into an array.  A line is loaded from the
-           42 =     01000010   text file.  In a long 720x16 array, the
-           42 =     01000010   font already loaded is used as a look up
-           42 =     01000010   sheet on whether to set each bit of the
-           42 =     01000010   720x16 array on or off.  When the entire
-           42 =     01000010   array is set (720x16 is 80 columns of text
-           7E =     01111110   times each character is 8 columns wide with
-           00 =     00000000   one blank spacer, so 9*80=720).  This array
-           00 =     00000000   is then read right to left and sent to the
-                               printer as a simple 8 row graphic file,
-                               each line taking two passes (8+8 = 16, which
-                               is how long the font is)
 
 ------------------------------------------------------------------------
 WHERE TO DOWNLOAD
 ------------------------------------------------------------------------
-  http://www.glue.umd.edu/~weave/wam/vmwprod/
-  http://www.vince.weaver.org/wam/vmwprod/
-  http://sunsite.unc.edu/pub/Linux/utils/text/fprint-3.0.3.tar.gz
+  http://www.glue.umd.edu/~weave/vmwprod/ansi2gif
+  http://www.vince.weaver.org/vmwprod/ansi2gif
+  http://metalab.unc.edu/pub/linux/apps/graphics/convert
+
+------------------------------------------------------------------------
+NON-LINUX ARCHITECTURES
+------------------------------------------------------------------------
+
+Solaris:
+  ansi2gif has been reported to work fine under Solaris, however you need
+  to find gnu "getopt()" code.  [You can steal it from the gdb package].
+  [thanks to arthurj@uccs.jpl.nasa.gov]
+  
+If you have reports of ansi2gif working on other architectures, feel free to
+e-mail me about them.
 
 -------------------------------------------------------------------------
 THANKS
 -------------------------------------------------------------------------
+       Thanks to Tom Boutell, author of the "gd" library
+       Thanks to the various whirlgif authors
+              http://www.danbbs.dk/~dino/whirlgif/
 
-       Special thanks to Augusta Thompson.
-       Also thanks to Marie Prosser, without whom this program probably 
-            never would have been written.
+       Also special thanks to Marie Prosser.
+
+
+------------------------------------------------------------------------
+DISCLAIMER
+------------------------------------------------------------------------
+   This program can manipulate GIF files.  There is a patent on the LZW 
+   compression that some gif files use.  If you are not allowed in your
+   country to create that type of GIF file, please don't.
 
 -------
-Vince Weaver (11 September 1998)
+Vince Weaver (6 July 1999)
 weave@eng.umd.edu

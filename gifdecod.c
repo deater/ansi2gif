@@ -41,7 +41,7 @@ void GifDecode(fp, pix, gifimage)
 	UBYTE *pix;
 	GifImageHdr gifimage;
 {
-  ULONG code, old, k;
+  ULONG code, old;
   picture=pix;
   picI = pass = bits = 0;
   numBits = 0;
@@ -114,7 +114,7 @@ void GifGetNextEntry(fp)
 void GifAddToTable(body, next, index)
        ULONG body, next, index;
 {
-  if (body > MAXVAL || next > MAXVAL || index > MAXVAL ) fprintf(stderr, "Error body=%d, next=%d, index=%d, \n", index);
+  if (body > MAXVAL || next > MAXVAL || index > MAXVAL ) fprintf(stderr, "Error body=%d, next=%d, index=%d, \n", index,index,index);
   else {
     table[index].valid = 1;
     table[index].data = table[next].first;

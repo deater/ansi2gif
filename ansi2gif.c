@@ -14,6 +14,10 @@
 
 #include "default_font.h"
 
+#define DEFAULT_TIMEDELAY 1 /* 1/100 of a second */
+#define DEFAULT_XSIZE    80
+#define DEFAULT_YSIZE    25
+
 #define VERSION "0.9.9"
 
 typedef struct {
@@ -80,18 +84,18 @@ int parse_numbers(unsigned char *string,int index) {
 #define BACK_CLEAR 0x8f
 
 int gif_the_text(int animate,int blink,vga_font *font,FILE *in_f,char *outfile,
-		 int time_delay) {
+		 int time_delay,int x_size,int y_size) {
    
     FILE *out_f,*animate_f=NULL;
     unsigned char temp_char;
-    unsigned char screen[80][25];
-    unsigned char attributes[80][25];
+    unsigned char *screen;
+    unsigned char *attributes;
 
     unsigned char escape_code[BUFSIZ];
     char temp_file_name[BUFSIZ];
       
     int x_position,y_position,oldx_position,oldy_position;
-    int color=0,x,y,emergency_exit=0;
+    int color=DEFAULT,x,y,emergency_exit=0;
     int escape_counter,n,n2,c,invisible=0,xx,yy;
 
     int colorF[16];
@@ -99,9 +103,10 @@ int gif_the_text(int animate,int blink,vga_font *font,FILE *in_f,char *outfile,
     int backtrack=0,use_blink=0,i;
    
     gdImagePtr im,im2,im3;
+
+    screen=(unsigned char *)calloc(x_size*y_size,sizeof(unsigned char));
+    attributes=(unsigned char *)calloc(x_size*y_size,sizeof(unsigned char));
    
-    int x_size=80,y_size=25;
- 
     im = gdImageCreate(x_size*8,y_size*16);  /* Full Screen */
     im2 = gdImageCreate(8,16);               /* One Character */
    
@@ -112,14 +117,14 @@ int gif_the_text(int animate,int blink,vga_font *font,FILE *in_f,char *outfile,
     colorF[3] =gdImageColorAllocate(im,0x00,0xAA,0xAA);
     colorF[4] =gdImageColorAllocate(im,0xAA,0x00,0x00);
     colorF[5] =gdImageColorAllocate(im,0xAA,0x00,0xAA);
-    colorF[6] =gdImageColorAllocate(im,0xAA,0xAA,0x00);
+    colorF[6] =gdImageColorAllocate(im,0xAA,0x55,0x22);
     colorF[7] =gdImageColorAllocate(im,0xAA,0xAA,0xAA);
-    colorF[8] =gdImageColorAllocate(im,0x44,0x44,0x44);
+    colorF[8] =gdImageColorAllocate(im,0x7d,0x7d,0x7d);
     colorF[9] =gdImageColorAllocate(im,0x00,0x00,0xFF);
     colorF[10]=gdImageColorAllocate(im,0x00,0xFF,0x00);
     colorF[11]=gdImageColorAllocate(im,0x00,0xFF,0xFF);
-    colorF[12]=gdImageColorAllocate(im,0xFF,0x00,0x00);
-    colorF[13]=gdImageColorAllocate(im,0xFF,0x00,0xFF);
+    colorF[12]=gdImageColorAllocate(im,0xFF,0x7d,0x7d);
+    colorF[13]=gdImageColorAllocate(im,0xFF,0x00,0xff);
     colorF[14]=gdImageColorAllocate(im,0xFF,0xFF,0x00);
     colorF[15]=gdImageColorAllocate(im,0xFF,0xFF,0xFF);
    
@@ -130,13 +135,13 @@ int gif_the_text(int animate,int blink,vga_font *font,FILE *in_f,char *outfile,
     colorC[3] =gdImageColorAllocate(im2,0x00,0xAA,0xAA);
     colorC[4] =gdImageColorAllocate(im2,0xAA,0x00,0x00);
     colorC[5] =gdImageColorAllocate(im2,0xAA,0x00,0xAA);
-    colorC[6] =gdImageColorAllocate(im2,0xAA,0xAA,0x00);
+    colorC[6] =gdImageColorAllocate(im2,0xAA,0x55,0x22);
     colorC[7] =gdImageColorAllocate(im2,0xAA,0xAA,0xAA);
-    colorC[8] =gdImageColorAllocate(im2,0x44,0x44,0x44);
+    colorC[8] =gdImageColorAllocate(im2,0x7d,0x7d,0x7d);
     colorC[9] =gdImageColorAllocate(im2,0x00,0x00,0xFF);
     colorC[10]=gdImageColorAllocate(im2,0x00,0xFF,0x00);
     colorC[11]=gdImageColorAllocate(im2,0x00,0xFF,0xFF);
-    colorC[12]=gdImageColorAllocate(im2,0xFF,0x00,0x00);
+    colorC[12]=gdImageColorAllocate(im2,0xFF,0x7d,0x7d);
     colorC[13]=gdImageColorAllocate(im2,0xFF,0x00,0xFF);
     colorC[14]=gdImageColorAllocate(im2,0xFF,0xFF,0x00);
     colorC[15]=gdImageColorAllocate(im2,0xFF,0xFF,0xFF);
@@ -161,17 +166,17 @@ int gif_the_text(int animate,int blink,vga_font *font,FILE *in_f,char *outfile,
        /* Clear the memory used to store the image */
     for(x=0;x<x_size;x++)
        for(y=0;y<y_size;y++) {
-          screen[x][y]=' ';
-	  attributes[x][y]=BLACK;
+          screen[x+(y*x_size)]=' ';
+	  attributes[x+(y*x_size)]=BLACK;
     }
    
        /* Initialize the Variables */
     x_position=1; y_position=1;
     oldx_position=1; oldy_position=1;
     
-    while (!feof(in_f) && (emergency_exit==0) ) {
-       fread(&temp_char,sizeof(temp_char),1,in_f);
-      
+    while (  ((fread(&temp_char,sizeof(temp_char),1,in_f))>0) 
+	     && (emergency_exit==0) ) {
+
           /* Did somebody say escape?? */
        if (temp_char==27) {
 	  fread(&temp_char,sizeof(temp_char),1,in_f);
@@ -229,7 +234,7 @@ int gif_the_text(int animate,int blink,vga_font *font,FILE *in_f,char *outfile,
 		/* Clear Screen and Home */
 	     case 'J': for (x=0;x<x_size;x++)
 		           for (y=0;y<y_size;y++)
-		               screen[x][y]=' ';
+		               screen[x+(y*x_size)]=' ';
 	               x_position=1;
 	               y_position=1;
 		       if (animate) {
@@ -259,7 +264,7 @@ int gif_the_text(int animate,int blink,vga_font *font,FILE *in_f,char *outfile,
 			  animate_gif(animate_f,temp_file_name,0,(x_position-1)*8,(y_position-1)*16,time_delay,0);  
 		       }
 		       for(x=x_position;x<x_size;x++) 
-		          screen[x][y_position]=' ';
+		          screen[x+(y_position*x_size)]=' ';
 	               x_position=x_size; 
 	               break;
 		/* Oh what fun, figuring out colors */
@@ -354,7 +359,14 @@ int gif_the_text(int animate,int blink,vga_font *font,FILE *in_f,char *outfile,
           else if (temp_char=='\015'); /* Skip carriage returns, as most *\
 				       \* ansi's are from DOS            */
           else {
-	     if (animate) {  /* Animate it if we have the right */
+	     
+	        /* Where is the best place to check for wrapping? */
+	     if (x_position>x_size) {
+	        x_position=x_position%x_size;
+		y_position++;
+	     }
+	     	     
+	     if (animate && y_position<=y_size) {  /* Animate it if we have the right */
 	        for(xx=0;xx<8;xx++) {
 	           for(yy=0;yy<16;yy++) {
 		      if ( ((unsigned char)
@@ -369,19 +381,21 @@ int gif_the_text(int animate,int blink,vga_font *font,FILE *in_f,char *outfile,
 	        animate_gif(animate_f,temp_file_name,0,(x_position-1)*8,
 			    (y_position-1)*16,time_delay,0); 
 	     }
-	     screen[x_position-1][y_position-1]=temp_char;
-             if (!invisible) attributes[x_position-1][y_position-1]=color;
-             x_position++;
+	     if (y_position<=y_size) {
+	        screen[(x_position-1)+((y_position-1)*x_size)]=temp_char;
+                if (!invisible) attributes[(x_position-1)+((y_position-1)*x_size)]=color;
+                x_position++;
+	     }
 	  }
              /* See if the screen has wrapped */
           if (x_position>x_size) {
 	     x_position=x_position%x_size;
 	     y_position++;
+	  }
 	    if (y_position>y_size) {
 	       emergency_exit=1;
 	       printf("Error!  Scrolled past maximum y_size of %i!\n\n",y_size);
 	    }
-	  }
        }
     }
     if ((!animate) && (!blink)) {  /* If not animating, draw the final picture */
@@ -390,10 +404,10 @@ int gif_the_text(int animate,int blink,vga_font *font,FILE *in_f,char *outfile,
              for(xx=0;xx<8;xx++) {
 		for(yy=0;yy<16;yy++) {
 	            if ( ((unsigned char)
-		       (font->font_data[(screen[x][y]*16)+yy])) &
+		       (font->font_data[(screen[x+(y*x_size)]*16)+yy])) &
 	               (128>>xx) )
-		       gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,colorF[attributes[x][y]&0x0f]);
-                  else gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,colorF[(attributes[x][y]&0xf0)>>4]);
+		       gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,colorF[attributes[x+(y*x_size)]&0x0f]);
+                  else gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,colorF[(attributes[x+(y*x_size)]&0xf0)>>4]);
     
 		}
 	     }
@@ -411,17 +425,17 @@ int gif_the_text(int animate,int blink,vga_font *font,FILE *in_f,char *outfile,
        for(x=0;x<x_size;x++) {
        for(xx=0;xx<8;xx++) {
        for(yy=0;yy<16;yy++) {
-	  if ( ((unsigned char) (font->font_data[(screen[x][y]*16)+yy])) &
+	  if ( ((unsigned char) (font->font_data[(screen[x+(y*x_size)]*16)+yy])) &
 	       (128>>xx) ) {
-	     if ((attributes[x][y]&0x80)) {
+	     if ((attributes[x+(y*x_size)]&0x80)) {
 		if (i) {
-                   gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,colorF[attributes[x][y]&0x0f]);
+                   gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,colorF[attributes[x+(y*x_size)]&0x0f]);
 		}
-		else gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,colorF[(attributes[x][y]&0x70)>>4]);
+		else gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,colorF[(attributes[x+(y*x_size)]&0x70)>>4]);
 	     }
-	     else gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,colorF[attributes[x][y]&0x0f]);
+	     else gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,colorF[attributes[x+(y*x_size)]&0x0f]);
 	  }
-          else gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,colorF[(attributes[x][y]&0x70)>>4]);
+          else gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,colorF[(attributes[x+(y*x_size)]&0x70)>>4]);
 			 
        }
        }
@@ -477,7 +491,6 @@ int display_help(char *name_run_as,int just_version)
        printf("   --color X=0xRRGGBB : Set color \"X\" [0-16] to hex value RRGGBB [a number]\n");
        printf("   --font fontfile    : Use vgafont \"filename\" to create gif\n"); 
        printf("   --help             : show this help\n");
-       printf("   --output filename  : name of the output gif file\n");
        printf("   --timedelay T      : Delay T 100ths of seconds between each displayed\n"
 	      "                        character in animate mode.\n");
        printf("   --version          : Print version information\n");
@@ -511,7 +524,7 @@ vga_font *load_vga_font(char *namest,int xsize,int ysize,int numchars)
    
     f=fopen(namest,"r");
     if (f==NULL) {
-       printf("ERROR loading font file %s.\n",namest);
+       printf("\nERROR loading font file %s.\n\n",namest);
        return NULL;
     }
    
@@ -557,14 +570,13 @@ vga_font *load_vga_font(char *namest,int xsize,int ysize,int numchars)
 int main(int argc, char **argv) {
 
     FILE *input_f,*output_f;
-    int i;
     char c;
-   
-    int input_name_present=0,output_name_present=0;
-    int time_delay=1;
+ 
+    int time_delay=DEFAULT_TIMEDELAY;
+    int x_size=DEFAULT_XSIZE,y_size=DEFAULT_YSIZE;
     int animate=0,blink=0;
-    char font_name[255],*input_name,*output_name;
-    vga_font *font_to_use;
+    char *font_name=NULL,*input_name=NULL,*output_name=NULL;
+    vga_font *font_to_use=NULL;
     char *endptr;
     int option_index = 0;
 
@@ -589,22 +601,42 @@ int main(int argc, char **argv) {
 
     opterr=0;
     while ((c = getopt_long (argc, argv,
-			     "abc:f:ho:t:vwx:y:",
+			     "abc:f:ht:vx:y:",
 			     long_options,&option_index))!=-1) {
        switch (c) {
 	  case 'a': animate=1; break;
 	  case 'b': blink=1; break;
-	  case 'c': printf ("c\n");break;
-	  case 'd': animate=0; break;
-	  case 'f': font_supplied=1; break;
+	  case 'c': printf ("\nWarning! Setting alternate colors not implemented yet.\n\n");break;
+	  case 'f': font_supplied=1; 
+	            font_name=strdup(optarg);
+	            break;
 	  case 'h': display_help(argv[0],0); break;
-	  case 'n': blink=0; break;
-	  case 'o': printf("o\n"); break;
-	  case 't': printf("t\n"); break;
+	  case 't': time_delay=strtol(optarg,&endptr,10);
+	            if ( endptr == optarg ) {
+		       printf("\nError! \"%s\" is an invalid time delay.\n"
+			      "            Please select a delay that is an integer number of 1/100 of seconds.\n\n",optarg);
+	               exit(9);
+		    }
+	            printf("\nTime Delay in Animation %f seconds\n",((float)time_delay/100));
+	            break;
 	  case 'v': display_help(argv[0],1); break;
-	  case 'x': printf("x\n"); break;
-	  case 'y': printf("y\n"); break;
-	  default : printf("Bad option man!\n"); exit(5); break;
+	  case 'x': x_size=strtol(optarg,&endptr,10);
+	            if ( endptr == optarg ) {
+	               printf("\nError!  \"%s\" is not a valid x size.\n\n",optarg);
+	               exit(9);
+		    }
+	            break;
+	  case 'y': if (!strcmp(optarg,"auto")) {
+	               printf("\nError! Automatic sizing is not implemented yet.  Sorry.\n\n");
+	               exit(12);
+	            } 
+	            y_size=strtol(optarg,&endptr,10);
+	            if ( endptr == optarg ) {
+		       printf("\nError!  \"%s\" is not a valid y size.\n\n",optarg); 
+		       exit(9);
+		    }
+	  break;
+	  default : printf("\nError! Bad command line option!\n\n"); exit(5); break;
        }
     }
    
@@ -615,17 +647,23 @@ int main(int argc, char **argv) {
     
     if (blink) time_delay=25;
    
-    if (optind<argc) {
-       printf("%i %i\n",optind,argc);
-       printf("%s\n",argv[optind]);
-       input_name=strdup(argv[optind]);   
-    
-       printf("%s\n",argv[optind+1]);
-       output_name=strdup(argv[optind+1]);
+    if (optind<argc)
+       input_name=strdup(argv[optind]);
+    else {
+       printf("\nError!  You need to have both an input and output filename specified!\n\n");
+       exit(3);
     }
-
-   if (font_supplied) 
+    if (optind<argc-1)
+       output_name=strdup(argv[optind+1]);
+    else {
+       printf( "\nError!  No output file was specified.\n\n" );
+       exit( 3 );
+    }
+   
+   if (font_supplied) { 
        font_to_use=load_vga_font(font_name,8,16,256);
+       if (font_to_use==NULL) exit(7);
+   }
     else {
        font_to_use=(vga_font *)malloc(sizeof(vga_font));
        font_to_use->font_data=(unsigned char *)&default_font;
@@ -634,7 +672,6 @@ int main(int argc, char **argv) {
        font_to_use->numchars=256;
       
     }
-    printf("Help %s\n",input_name);
    
     if ( (input_f=fopen(input_name,"r"))==NULL) {
 	  printf("\nInvalid Input File: %s\n",input_name);
@@ -646,10 +683,9 @@ int main(int argc, char **argv) {
        return 1;    
     }
     fclose(output_f);
-
-    printf("Alright so far!\n");
    
-    gif_the_text(animate,blink,font_to_use,input_f,output_name,time_delay);
+    gif_the_text(animate,blink,font_to_use,input_f,output_name,time_delay,
+		 x_size,y_size);
  
     fclose(input_f);
 

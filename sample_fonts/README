@@ -1,0 +1,18 @@
+These are some standard VGA fonts that can be used with the "ansi2gif"
+utility.
+
+c.fnt        -- the font I use for my console.  Comes with Slackware.
+default.fnt  -- the one currently being used by ansi2gif
+future.fnt   -- a neat looking font I picked up ages ago.
+marie.fnt    -- a Tolkien font I made a long time ago for my gf
+medieval.fnt -- another cool looking font I found long ago
+
+To replace the default font file used by ansi2gif, first make the
+font2include program.  Typing "make" in this directory should handle that.
+
+Then "font2include font.fnt > default_font.h"
+
+where font.fnt is the new font you want to be the default.
+
+Just copy the resulting "default_font.h" file into the main ansi2gif source
+code directory and recompile.

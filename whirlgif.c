@@ -201,7 +201,7 @@ void animate_gif(FILE *fout,char *fname,int firstImage,int Xoff,int Yoff,
 
   if ( ( gifimage.m != 0 && globmap !=0 ) || minimize !=0 ) {
     UBYTE translator[256], *p, *po;
-    int left, right, top, bot, i, j, k, l, hi, wi;
+    int left, right=0, top, bot=0, i, j, k, l, hi, wi;
     long dsquare, dsquare1;
     hi = gifimage.height;
     wi = gifimage.width;
@@ -401,7 +401,7 @@ void GifScreenHeader(fp, fout, firstTime)
       gifCmap[i].cmap.blue  = temp = Xgetc(fp);
       if (firstTime) fputc(temp, fout);
 
-    if(firstTime && (global.trans.type==TRANS_RGB && global.trans.valid==0) )
+    if(firstTime && (global.trans.type==TRANS_RGB && global.trans.valid==0) ) {
       if (global.trans.red == gifCmap[i].cmap.red &&
 	  global.trans.green == gifCmap[i].cmap.green &&
 	  global.trans.blue == gifCmap[i].cmap.blue) {
@@ -412,6 +412,7 @@ void GifScreenHeader(fp, fout, firstTime)
       else
 	if(debugFlag > 1) fprintf(stderr, "No transp. RGB=(%x,%x,%x)\n",
 	 gifCmap[i].cmap.red, gifCmap[i].cmap.green, gifCmap[i].cmap.blue);
+    }
     }
   }
 }

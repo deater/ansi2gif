@@ -71,16 +71,13 @@ extern int count;
 void GifEncode(fout, pixels, depth, siz)
 FILE *fout; UBYTE *pixels; int depth, siz;
 {
-  int     i, j;
    
   GifTree *first = &GifRoot, *newNode, *curNode;
   UBYTE   *end;
-  int     cc, eoi, code, next, tel=0;
+  int     cc, eoi, next, tel=0;
   short   cLength;
 
   char    *pos, *buffer;
-
-  char    cmd[100], filename[100];
 
   empty[0] = NULL;
   need = 8;
@@ -246,7 +243,7 @@ void ClearTree(cc,root)
 int cc;
 GifTree *root;
 {
-  int i,j = 0;
+  int i;
   GifTree *newNode, **xx;
 
   if (debugFlag) fprintf(stderr, "Clear Tree  cc= %d\n", cc);

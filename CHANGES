@@ -6,3 +6,31 @@
 
 3 July 1999
 + Cleaning up and renaming files.
+
+5 July 1999
++ Got animation working!
++ Merged in some whirgif code.  Basically just added it to be called.  Much
+  simpler than telling people they have to install a zillion packaged before
+  they can use my program.
++ Got blink working!
++ ansi2gif opens a temp file as /tmp/ansi2gif_%i.gif where %i is the pid.
+  I am worried about the security of that.  Do I need to check for symlinks
+  before opening it?
++ Started cleaning up the code the best I could
+
+6 July 1999
++ Got command line options working
++ Tweaked the colors a bit.
++ Fixed up the makefile
++ Made it so arbitray x and y sized can be used [instead of fixed 80x25]
++ Fixed an error where it was reading beyond the end of the file
++ Tweaked default_font a bit more.  Fix up the documentation and I will
+  be ready to announce!
+
+8 July 1999
++ Got reports the ansi2gif works under Solaris, needing only "getopt()" code.
+  I probably should add that to the distribution.  [thanks to
+  arthurj@uccs.jpl.nasa.gov]
++ Added check to be sure output file is specified.  Otherwise it will
+  segfault.  Thanks to Ben Canning <bdc@bethany.edu>
+  
