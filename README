@@ -1,8 +1,13 @@
-*****************  ansi2gif version 0.0.9  ***************
-*****************                          ***************
+*****************  ansi2png version 0.9.11  ***************
+*****************                           ***************
                       by Vince Weaver
-                         weave@eng.umd.edu
-			    http://www.ee.umd.edu/~weave
+                         vince@deater.net
+			    http://www.deater.net/weave/
+			    
+NOTE:  THIS PNG VERSION IS A HASTILY MODIFIED VERSION OF THE GIF VERSION
+       ANIMATION WILL NOT WORK WITH THIS VERSION.  ANY HELP IMPLEMENTING
+       MNG FILES WOULD BE APPRECIATED -- vmw 4 march 2003
+			    
 			 
 Requirements:  Designed for Linux, but any platform with gcc will probably 
                work.

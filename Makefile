@@ -1,5 +1,5 @@
 ##############################################################
-#  Makefile for ansi2gif 0.9.9 -- by Vince Weaver            #
+#  Makefile for ansi2png 0.9.11 -- by Vince Weaver           #
 #                                                            #
 #  To modify for your configuration, add or remove the #     #
 #                                                            #
@@ -25,19 +25,19 @@ L_OPTS = $(GD_L_OPTS) -lgd -lm
 
 # DO NOT EDIT BELOW THIS LINE
 
-all:	ansi2gif
+all:	ansi2png
 
 clean:
 	rm -f *.o
-	rm -f ansi2gif
+	rm -f ansi2png
 	rm -f *~
 
-install:	ansi2gif
-	cp ansi2gif /usr/local/bin
+install:	ansi2png
+	cp ansi2png /usr/local/bin
 	
-ansi2gif:	ansi2gif.o whirlgif.o gifdecod.o gifencod.o gifdecod.o
-	$(CC) -o ansi2gif ansi2gif.o whirlgif.o gifencod.o gifdecod.o $(L_OPTS)
-	@strip ansi2gif
+ansi2png:	ansi2png.o whirlgif.o gifdecod.o gifencod.o gifdecod.o
+	$(CC) -o ansi2png ansi2png.o whirlgif.o gifencod.o gifdecod.o $(L_OPTS)
+	@strip ansi2png
 
 whirlgif.o:	whirlgif.c
 	$(CC) $(C_OPTS) -c whirlgif.c
@@ -48,5 +48,5 @@ gifdecod.o:	gifdecod.c
 gifencod.o:	gifencod.c
 	$(CC) $(C_OPTS) -c gifencod.c
 
-ansi2gif.o:	ansi2gif.c
-	$(CC) $(C_OPTS) -c ansi2gif.c 
+ansi2png.o:	ansi2png.c
+	$(CC) $(C_OPTS) -c ansi2png.c 

@@ -1,16 +1,15 @@
 Begin3
 Title:        ansi2gif            
-Version:      0.9.10
-Entered-date: 26NOV00   
+Version:      0.9.11
+Entered-date: 04MAR03   
 Description:  Create a gif file from BBS "Ansi" files.
               Animations and blinking output is supported.
 Keywords:     ansi gif bbs vga font        
-Author:       weave@eng.umd.edu (Vincent Weaver)         
-Maintained-by:weave@wng.umd.edu (Vincent Weaver)  
+Author:       vince@deater.net (Vincent Weaver)         
+Maintained-by:vince@deater.net (Vincent Weaver)  
 Primary-site: metalab.unc.edu /pub/linux/apps/graphics/convert  
               50Kb ansi2gif.tar.gz
-Alternate-site: http://www.glue.umd.edu/~weave/vmwprod
-Alternate-site: http://www.vince.weaver.org/vmwprod
+Alternate-site: http://www.deater.net/weave/vmwprod
 Original-site:  
 Platform: Linux 
 Copying-policy: GPL

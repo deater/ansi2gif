@@ -1,7 +1,7 @@
 /*             ----------- ansi2gif.c ------------------       *\
 \*   by Vince Weaver... Makes a gif out of "ANSI" files        */
 /*   Based on my "fontprint" program.                          *\
-\* http://www.glue.umd.edu/~weave/vmwprod/vmwsoft.html         */
+\* http://www.deater.net/weave/vmwprod/ansi2gif/               */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,7 +18,7 @@
 #define DEFAULT_XSIZE    80
 #define DEFAULT_YSIZE    25
 
-#define VERSION "0.9.10"
+#define VERSION "0.9.12"
 
 typedef struct {
       unsigned char *font_data;
@@ -30,6 +30,8 @@ typedef struct {
     /* Located in the "whirlgif.c" file */
 void animate_gif(FILE *fout,char *fname,int firstImage,int Xoff,int Yoff,
 		 int delay_time,int loop_val); /* time in 100th of seconds */
+
+
 
 
     /* If index=0, return the number of numbers */
@@ -216,9 +218,12 @@ int gif_the_text(int animate,int blink,vga_font *font,FILE *in_f,char *outfile,
 	               break;
 		/* Decrement X by N */
 	     case 'D': n=parse_numbers((char *)&escape_code,1); 
-	               backtrack++;
-		       x_position-=n;
-		       if (x_position<0) x_position=0;
+		       if (n!=255) {		     
+	                  backtrack++;
+		          x_position-=n;
+		          if (x_position<0) x_position=0;
+		       }
+		
 	               break;
 		/* Report Current Position */
 	     case 'R': printf("Current Position: %d, %d\n",
@@ -263,6 +268,7 @@ int gif_the_text(int animate,int blink,vga_font *font,FILE *in_f,char *outfile,
 			  gdImageDestroy(im3);
 			  animate_gif(animate_f,temp_file_name,0,(x_position-1)*8,(y_position-1)*16,time_delay,0);  
 		       }
+		       if (y_position<y_size)
 		       for(x=x_position;x<x_size;x++) 
 		          screen[x+(y_position*x_size)]=' ';
 	               x_position=x_size; 

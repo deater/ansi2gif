@@ -1,0 +1,16 @@
+Begin3
+Title:        ansi2png
+Version:      0.9.11
+Entered-date: 04MAR03   
+Description:  Create a png file from BBS "Ansi" files.
+              Animations and blinking output is supported.
+Keywords:     ansi png bbs vga font        
+Author:       vince@deater.net (Vincent Weaver)         
+Maintained-by:vince@deater.net (Vincent Weaver)  
+Primary-site: metalab.unc.edu /pub/linux/apps/graphics/convert  
+              50Kb ansi2gif.tar.gz
+Alternate-site: http://www.deater.net/weave/vmwprod/ansi2gif/
+Original-site:  
+Platform: Linux 
+Copying-policy: GPL
+End
