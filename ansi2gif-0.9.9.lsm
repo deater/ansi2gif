@@ -1,16 +1,16 @@
 Begin3
-Title:        Fontprint for Linux           
-Version:      3.0.3
-Entered-date: 11SEP98   
-Description:  Print text files using standard VGA/linux console fonts    
-Keywords:     vga font print printer console fonts       
+Title:        ansi2gif            
+Version:      0.9.9
+Entered-date: 04JUL99   
+Description:  Create a gif file from BBS "Ansi" files    
+Keywords:     ansi gif bbs vga font        
 Author:       weave@eng.umd.edu (Vincent Weaver)         
 Maintained-by:weave@wng.umd.edu (Vincent Weaver)  
 Primary-site: sunsite.unc.edu /pub/Linux/utils/text  
-              25Kb fprint-3.0.3.tar.gz
+              25Kb ansi2gif.tar.gz
 Alternate-site: http://www.glue.umd.edu/~weave/vmwprod
 Alternate-site: http://www.vince.weaver.org/vmwprod
 Original-site:  
-Platform: Linux, other with gcc compiler 
+Platform: Linux 
 Copying-policy: GPL
 End

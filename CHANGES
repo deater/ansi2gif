@@ -1,28 +1,8 @@
-[sorry.. no News before feb 1998]
+15 June 1999
++ Decided to branch into a new package, instead of just making this a newer
+  version of fontprint.  Fontprint is good at what it does, no need to add
+  all this excess specialization.  Also lets me code from scratch.
++ Got it creating a gif of linux_logo output.
 
-19 February 1998
-+ Hopefully fixed a bug that kept from running under glibc2.
-+ Hopefully [thanks to Mr. Branko Bratkovic] 
-  <bkbratko@ardu.raaf.defence.gov.au>] got printer support working again.
-+ Set up fprint-3.0.1
-
-14 July 1998
-+ Meant to upload 3.0.1 way back when.  Never did.  This package gets much
-  less e-mail traffic than some of my other endeavours.
-+ Added the manpage and psf_fonts.txt file provided by Mr. Bratkovic
-+ Stick 3.0.1 at my page pending confirmation that I didn't forget anything.
-+ Eventually I do want to re-write a lot of the code.  I just haven't had
-  time and the time I spend on my programs often is proportional to how 
-  many e-mails I get about them.
-  
-20 July 1998
-+ Finally added the psf stuff in that I kept forgetting to.  Re-did some 
-  documentation.  Bundled up 3.0.2.  Hopefully this will be good enough
-  to put out to freshmean.net and sunsite.
-
-18 August 1998
-+ Fixed so ascii codes > 128 are printed properly as gifs.  Thanks to
-  Pino Zollo <pinoz@highway.com.py> for the bug report.
-  
-11 September 1998
-+ Made a 3.0.3 release.  Nothing fixed since August.
+3 July 1999
++ Cleaning up and renaming files.

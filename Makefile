@@ -10,29 +10,43 @@ CC = gcc
 
 #For Linux
 PLATFORM = 'Linux'
-C_OPTS = -O2 -Wall 
+C_OPTS = -O2 -Wall  -DMAKE_GIF
 
 #If You want GIF support, and you have installed the gd library
 # [see README] then uncomment the following.
 
-EXTRA = $(C_OPTS) -DMAKE_GIF
 L_OPTS = -lgd -lm
 
 # DO NOT EDIT BELOW THIS LINE
 
-all:	fontprint
+all:	ansi2gif
 
 clean:
 	rm -f *.o
-	rm -f fontprint
+	rm -f ansi2gif
 	rm -f *~
 
-install:	fontprint
-	cp fontprint /usr/local/bin
+install:	ansi2gif
+	cp ansi2gif /usr/local/bin
 	
-fontprint:	fontprint.o 
-	$(CC) $(C_OPTS) -o fontprint fontprint.o $(L_OPTS)
-	@strip fontprint
+ansi2gif:	ansi2gif.o whirlgif.o gifdecod.o gifencod.o gifdecod.o
+	$(CC) -o ansi2gif ansi2gif.o whirlgif.o gifencod.o gifdecod.o $(L_OPTS)
+	@strip ansi2gif
 
-fontprint.o:	fontprint.c
-	$(CC) $(C_OPTS) $(EXTRA) -c fontprint.c 
+whirgif.o:	whirlgif.c
+	$(CC) $(C_OPTS) -c whirlgif.c
+	
+gifdecod.o:	gifdecod.c
+	$(CC) $(C_OPTS) -c gifdecod.c
+
+gifencod.o:	gifencod.c
+	$(CC) $(C_OPTS) -c gifencod.c
+
+ansi2gif.o:	ansi2gif.c
+	$(CC) $(C_OPTS) -c ansi2gif.c 
+
+font2include:	font2include.o
+	$(CC) -o font2include font2include.o 
+	
+font2include.o:	font2include.c
+	$(CC) $(C_OPTS) -c font2include.c
