@@ -34,3 +34,8 @@
 + Added check to be sure output file is specified.  Otherwise it will
   segfault.  Thanks to Ben Canning <bdc@bethany.edu>
   
+26 November 2000
++ Added a fix so it handles tab's correctly.  Hardcoded as 4 spaces for now
+  Should make it configurable.  It is hard going back on code this old to 
+  work with it.
+  

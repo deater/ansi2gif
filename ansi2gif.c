@@ -18,7 +18,7 @@
 #define DEFAULT_XSIZE    80
 #define DEFAULT_YSIZE    25
 
-#define VERSION "0.9.9"
+#define VERSION "0.9.10"
 
 typedef struct {
       unsigned char *font_data;
@@ -356,7 +356,10 @@ int gif_the_text(int animate,int blink,vga_font *font,FILE *in_f,char *outfile,
 	     x_position=1;
 	     y_position++;
 	  }
-          else if (temp_char=='\015'); /* Skip carriage returns, as most *\
+	  else if (temp_char=='\t') { /* Tab */
+	     x_position+=4;  
+	  }
+          else if (temp_char=='\r'); /* Skip carriage returns, as most *\
 				       \* ansi's are from DOS            */
           else {
 	     
@@ -461,7 +464,7 @@ int gif_the_text(int animate,int blink,vga_font *font,FILE *in_f,char *outfile,
     }
    if ((backtrack) && !(animate)) {
       printf("Warning!  The cursor moved backwards and animated output was not selected.\n"
-	     "          For proper output, you might want to try again with --ansi\n\n"); 
+	     "          For proper output, you might want to try again with --animate\n\n"); 
    }
    if ((use_blink)&&(!blink)) {
       printf("Warning!  A blinking color code was used.  To display blinking ansis you\n"

@@ -1,7 +1,7 @@
 Begin3
 Title:        ansi2gif            
-Version:      0.9.9
-Entered-date: 06JUL99   
+Version:      0.9.10
+Entered-date: 26NOV00   
 Description:  Create a gif file from BBS "Ansi" files.
               Animations and blinking output is supported.
 Keywords:     ansi gif bbs vga font        
