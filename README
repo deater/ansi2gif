@@ -1,13 +1,9 @@
-*****************  ansi2gif version 0.9.11 ***************
-*****************                          ***************
+*****************  ansi2gif version 0.9.13  ***************
+*****************                           ***************
                       by Vince Weaver
-                         vince@deater.net
-			    http://www.deater.net/weave
-			 
-NOTE: THE .11 UPDATE SIMPLY UPDATED CONTACT INFO.  SEE ANSI2PNG FOR MAKING
-      PNG FILES.  TO RUN THIS VERSION OF ANSI2GIF YOU NEED A NO-LONGER
-      AVAILABLE VERSION OF LIBGD.
-			 
+                         vince _at_ deater.net
+			    http://www.deater.net/weave/
+			    
 			 
 Requirements:  Designed for Linux, but any platform with gcc will probably 
                work.
@@ -18,36 +14,36 @@ Requirements:  Designed for Linux, but any platform with gcc will probably
 
       I was thinking of extending my "fontprint" program to make it 
       work better with gif output.  But then I thought, if I am going
-      to do that, why not make it so it can print colors?  And well
-      I went overboard, one thing led to another, and here is ansi2gif.
+      to do that, why not make it so it can print colors?
+      I went a bit overboard, one thing led to another, and here is ansi2gif.
       
-      I decided to leave "fontprint" behind, because it does its job 
+      I decided to leave "fontprint" behind  because it does its job 
       well.  ansi2gif is specialized, and while it shares some code, it
       is a completely different program.
       
-      The included example_ansi's are ones I drew myself back in the
+      The included example_ansis are ones I drew myself back in the
       period of 1992-1996 or so.  My friends Jason Grimm and John Clemens
       ran a WWIV BBS called "Utopia".  The BBS no longer exists, please
-      do not try to call.  I made about 100 different ANSI's, mostly
-      animations.  But since the resulting gif's end up being about 100K
-      a piece, I have no room to upload them all, sorry.....
-      
+      do not try to call.  I made about 100 different ANSIs, mostly
+      animations.  It was a desire to see them again that was the
+      real impetus behind this project.
+            
 -------------------------------------------------------------------------
 HOW IT WORKS
 -------------------------------------------------------------------------
 
-     Basically I built an "ANSI" escape-code interpreter using a reference
+     I built an "ANSI" escape-code interpreter using a reference
      someone sent me once while I was working on linux_logo.
      
-     Then I used Tom Boutell's [http://www.boutell.com] excellent "gd"
-     gif library to make the basis gif's.
+     I used Tom Boutell's [http://www.boutell.com] excellent "gd"
+     gif library to make the basis gifs.
      
      I used a slightly modified version of the "whirlgif" utility to 
      do the animations.  [http://www.danbbs.dk/~dino/whirlgif]
 
      A temporary file is created in /tmp/ansi2gif_%i.gif [where %i is
      the pid of ansi2gif] in which all the transitory gifs for an
-     animation are made.
+     animation are made. (NOTE TO SELF.. INSECURE.  FIX THIS)
 
      The fonts used are standard "vga" fonts.  Basically they are just
      4k files holding a set of 256x8x16 data, where there are 256 characters,
@@ -55,20 +51,25 @@ HOW IT WORKS
      8 bit character, in binary, tells what bits to turn on and off to make
      an 8x16 font.  
      
+     The EPS output works a bit differently.  It uses the "pcfont"
+     Postscript font, and does some tricks to try to keep the size
+     of the resulting file as small as possible.
+     
 ------------------------------------------------------------------------
 INSTALLING
 ------------------------------------------------------------------------
 
-    Get the "gd" utility from http://www.boutell.com/gd/
+    Get the "gd" utility from http://www.libgd.org/
+    (Or else install the version that comes with your operating system).
     Install it.
 
     Now install ansi2gif
     
     Uncompress the file 
-       tar -xzvf ansi2gif-0.9.9.tar.gz
+       tar -xzvf ansi2gif-0.9.13.tar.gz
        
     Enter the created directory
-       cd ansi2gif-0.9.9
+       cd ansi2gif-0.9.13
        
     The Makefile should be OK.  If you have "gd" installed in a 
     non-standard directory, you might have to edit the makefile to
@@ -79,7 +80,6 @@ INSTALLING
        
     Copy the program to where binaries are kept.
        make install
-    Is the same as 'cp ansi2gif /usr/local/bin'
     
     That's it!  It should be all installed!
      
@@ -87,15 +87,17 @@ INSTALLING
 USAGE
 ---------------------------------------------------------------------
 
- ansi2gif [--animate] [--blink] [--color X=0xYYYYYY]
-          [--font fontfile] [--help] [--version] [--timedelay T]
+ ansi2gif [--animate] [--blink] [--eps] [--font fontfile]
+          [--gif] [--help] [--png] [--version] [--timedelay T]
 	  [--xsize X] [--ysize Y] input_file output_file
 		     
        --animate          : Create an animated gif if an animated ansi
        --blink            : Create an animated gif enabling blinking
-       --color X=0xRRGGBB : Set color "X" [0-16] to hex value RRGGBB [a number]
+       --eps              : output an EPS file
        --font fontfile    : Use vgafont "filename" to create gif
+       --gif              : output a GIF file
        --help             : show this help
+       --png		  : output a PNG file
        --timedelay T      : Delay T 100ths of seconds between each displayed
                             character in animate mode.
        --version          : Print version information
@@ -110,8 +112,7 @@ USAGE
 ------------------------------------------------------------------------
 WHERE TO DOWNLOAD
 ------------------------------------------------------------------------
-  http://www.glue.umd.edu/~weave/vmwprod/ansi2gif
-  http://www.vince.weaver.org/vmwprod/ansi2gif
+  http://www.deater.net/weave/vmwprod/ansi2gif/
   http://metalab.unc.edu/pub/linux/apps/graphics/convert
 
 ------------------------------------------------------------------------
@@ -121,7 +122,7 @@ NON-LINUX ARCHITECTURES
 Solaris:
   ansi2gif has been reported to work fine under Solaris, however you need
   to find gnu "getopt()" code.  [You can steal it from the gdb package].
-  [thanks to arthurj@uccs.jpl.nasa.gov]
+  [thanks to arthurj _at_ uccs.jpl.nasa.gov]
   
 If you have reports of ansi2gif working on other architectures, feel free to
 e-mail me about them.
@@ -133,16 +134,9 @@ THANKS
        Thanks to the various whirlgif authors
               http://www.danbbs.dk/~dino/whirlgif/
 
-       Also special thanks to Marie Prosser.
+       Also special thanks to my lovely wife.
 
-
-------------------------------------------------------------------------
-DISCLAIMER
-------------------------------------------------------------------------
-   This program can manipulate GIF files.  There is a patent on the LZW 
-   compression that some gif files use.  If you are not allowed in your
-   country to create that type of GIF file, please don't.
 
 -------
-Vince Weaver (6 July 1999)
-weave@eng.umd.edu
+Vince Weaver (17 August 2007)
+vince _at_ deater.net

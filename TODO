@@ -5,3 +5,8 @@
 Far-Out-There
 + Scrolling animated gif.  I.e. simulate the console when y>y_size
 
++ Input from stdin, output to stdout?
++ Detect command line is "ansi2png' etc, and set output automatically?
++ Set output automatically based on filename
++ create safe temp files in /tmp
++ Fuzz testing

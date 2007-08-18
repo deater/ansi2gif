@@ -27,20 +27,42 @@
 + Tweaked default_font a bit more.  Fix up the documentation and I will
   be ready to announce!
 
+RELEASE 0.9.9
+
 8 July 1999
 + Got reports the ansi2gif works under Solaris, needing only "getopt()" code.
   I probably should add that to the distribution.  [thanks to
-  arthurj@uccs.jpl.nasa.gov]
+  arthurj _at_ uccs.jpl.nasa.gov]
 + Added check to be sure output file is specified.  Otherwise it will
-  segfault.  Thanks to Ben Canning <bdc@bethany.edu>
+  segfault.  Thanks to Ben Canning <bdc _at_ bethany.edu>
   
 26 November 2000
-+ Added a fix so it handles tab's correctly.  Hardcoded as 4 spaces for now
++ Added a fix so it handles tabs correctly.  Hardcoded as 4 spaces for now
   Should make it configurable.  It is hard going back on code this old to 
   work with it.
   
+RELEASE 0.9.10
+  
+4 March 2003
++ Split off png package
+
+RELEASE 0.9.11
 
 18 October 2004
++ Fix some buffer overrun bugs from ansi2gif
 + Tried to get animated gifs to go faster.  Not possible very easily :(
 + Fixed a few buffer overuns that either crashed or skipped the first char.
 
+RELEASE 0.9.12
+
+15 August 2007
++ Re-merge the two packages, as libgf supports GIFs again
+  due to patents expiring.
+
+17 August 2007
++ Finish EPS support.
++ Allow input/output from stdin/stdout
++ Detect if we are called as ansi2gif/ansi2eps/ansi2png and
+  act accordingly.
+
+RELEASE 0.9.13
