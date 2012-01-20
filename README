@@ -1,4 +1,4 @@
-*****************  ansi2gif version 0.9.13  ***************
+*****************  ansi2gif version 0.9.14  ***************
 *****************                           ***************
                       by Vince Weaver
                          vince _at_ deater.net
@@ -66,10 +66,10 @@ INSTALLING
     Now install ansi2gif
     
     Uncompress the file 
-       tar -xzvf ansi2gif-0.9.13.tar.gz
+       tar -xzvf ansi2gif-0.9.14.tar.gz
        
     Enter the created directory
-       cd ansi2gif-0.9.13
+       cd ansi2gif-0.9.14
        
     The Makefile should be OK.  If you have "gd" installed in a 
     non-standard directory, you might have to edit the makefile to

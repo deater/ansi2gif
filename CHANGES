@@ -66,3 +66,11 @@ RELEASE 0.9.12
   act accordingly.
 
 RELEASE 0.9.13
+
+20 January 2012
++ Make errors/warnings print to stderr so they don't contaminate
+  gifs being printed to stdout
++ Fix warnings from modern gcc
++ Implement --ysize auto at the request of mrmocha
+
+RELEASE 0.9.14

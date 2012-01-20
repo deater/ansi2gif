@@ -22,11 +22,12 @@
 #define XFONTSIZE 7.1
 #define YFONTSIZE 13
 
-#define VERSION "0.9.13"
+#define VERSION "0.9.14"
 
 #define OUTPUT_PNG 0
 #define OUTPUT_GIF 1
 #define OUTPUT_EPS 2
+#define OUTPUT_MPG 3
 
 typedef struct {
     unsigned char *font_data;
@@ -362,7 +363,7 @@ static void gif_the_text(int animate,int blink,
     }
 
     if ((animate||blink) && (output_type!=OUTPUT_GIF)) {
-       printf("Error!  Can only animate if output is gif!\n");
+       fprintf(stderr,"Error!  Can only animate if output is gif!\n");
        exit(-1);
     }
    
@@ -370,7 +371,7 @@ static void gif_the_text(int animate,int blink,
        sprintf(temp_file_name,"/tmp/ansi2gif_%i.gif",getpid());
          
        if ( (animate_f=fopen(temp_file_name,"wb"))==NULL) {
-	  printf("Error!  Cannot open file %s to store temporary "
+	  fprintf(stderr,"Error!  Cannot open file %s to store temporary "
 		 "animation info!\n\n",temp_file_name);
 	  exit(1);
        }
@@ -403,7 +404,7 @@ static void gif_the_text(int animate,int blink,
        if (temp_char==27) {
 	  fread(&temp_char,sizeof(temp_char),1,in_f);
 	     /* If after escape we have '[' we have an escape code */
-	  if (temp_char!='[') printf("False Escape\n");
+	  if (temp_char!='[') fprintf(stderr,"False Escape\n");
 	  else {
 	     escape_counter=0;
 	     while (!isalpha(temp_char)) { /* Read in the command */
@@ -416,28 +417,28 @@ static void gif_the_text(int animate,int blink,
 	     switch(escape_code[escape_counter-1]) {
 	        /* Move to x,y */
 	     case 'H': 
-	     case 'f': n=parse_numbers((char *)&escape_code,1);
-	               n2=parse_numbers((char *)&escape_code,2);
+	     case 'f': n=parse_numbers(escape_code,1);
+	               n2=parse_numbers(escape_code,2);
 	               if ( (y_position>n) || 
 			   ((x_position>n2)&&(y_position>=n))) backtrack++;
 		       y_position=n;
 	               x_position=n2;		       
 	               break; 
 		/* Decrement Y by N */
-	     case 'A': n=parse_numbers((char *)&escape_code,1);
+	     case 'A': n=parse_numbers(escape_code,1);
 		       backtrack++;
 	               y_position-=n;
 	               break;
 		/* Increment Y by N */
-	     case 'B': n=parse_numbers((char *)&escape_code,1);
+	     case 'B': n=parse_numbers(escape_code,1);
 	               y_position+=n;
 	               break;
 	        /* Increment X by N */
-	     case 'C': n=parse_numbers((char *)&escape_code,1); 
+	     case 'C': n=parse_numbers(escape_code,1); 
 	               x_position+=n;
 	               break;
 		/* Decrement X by N */
-	     case 'D': n=parse_numbers((char *)&escape_code,1); 
+	     case 'D': n=parse_numbers(escape_code,1); 
 		       if (n!=255) {
 	                  backtrack++;
 		          x_position-=n;
@@ -446,7 +447,7 @@ static void gif_the_text(int animate,int blink,
 		
 	               break;
 		/* Report Current Position */
-	     case 'R': printf("Current Position: %d, %d\n",
+	     case 'R': fprintf(stderr,"Current Position: %d, %d\n",
 			      x_position,y_position); break;
 		/* Save Position */
 	     case 's': oldx_position=x_position;
@@ -464,7 +465,7 @@ static void gif_the_text(int animate,int blink,
 	               y_position=1;
 		       if (animate) {
 			  if ( (animate_f=fopen(temp_file_name,"wb"))==NULL) {
-			     printf("Error!  Cannot open file %s to store temporary animation info.\n",
+			     fprintf(stderr,"Error!  Cannot open file %s to store temporary animation info.\n",
 				    temp_file_name);
 			     exit(1);
 			  }
@@ -476,7 +477,7 @@ static void gif_the_text(int animate,int blink,
 		/* Clear to end of line */
 	     case 'K': if (animate) {
 			  if ( (animate_f=fopen(temp_file_name,"wb"))==NULL) {
-			     printf("Error!  Cannot open file %s to store temporary animation info.\n",
+			     fprintf(stderr,"Error!  Cannot open file %s to store temporary animation info.\n",
 				    temp_file_name);
 			     exit(1);
 			  }
@@ -495,18 +496,18 @@ static void gif_the_text(int animate,int blink,
 	               break;
 		/* Oh what fun, figuring out colors */
 	     case 'm': /* printf("Color\n"); */
-	               n=parse_numbers((char *)&escape_code,0);
+	               n=parse_numbers(escape_code,0);
 	               for(n2=1;n2<n+1;n2++) {
-			  c=parse_numbers((char *)&escape_code,n2);
+			  c=parse_numbers(escape_code,n2);
 			  switch(c) {
 			   case 0: color=DEFAULT; break; /* Normal */
 			   case 1: color|=INTENSE; break; /* BOLD */
-			   case 4: printf("Warning!  Underline not supported!\n\n");
+			   case 4: fprintf(stderr,"Warning!  Underline not supported!\n\n");
 			           break;
 			   case 5: color|=BLINK; use_blink++; break; /* BLINK */
 			   case 7: color=(color>>4)+(color<<4); /* REVERSE */
 			           break;
-			   case 8: invisible=1; printf("Warning! Invisible!\n\n"); break;
+			   case 8: invisible=1; fprintf(stderr,"Warning! Invisible!\n\n"); break;
 			   case 30: color&=FORE_CLEAR; /* Black Fore */
 			            break;
 			   case 31: color&=FORE_CLEAR; /* Red Fore */
@@ -561,17 +562,17 @@ static void gif_the_text(int animate,int blink,
 			           color|=BACK_RED;
 			           color|=BACK_GREEN;
 			           color|=BACK_BLUE;  break;
-			   default: printf("Warning! Invalid Color %d!\n\n",c);
+			   default: fprintf(stderr,"Warning! Invalid Color %d!\n\n",c);
 			  }  
 		       }
 	               break;
 		/* Set screen mode */
-	     case 'h': printf("Warning!  Screen Mode Setting not Supported.\n\n"); 
+	     case 'h': fprintf(stderr,"Warning!  Screen Mode Setting not Supported.\n\n"); 
 	               break;
 	        /* note, look for [= code */   
- 	     case 'p': printf("Warning! Keyboard Reassign not Supported.\n"); 
+ 	     case 'p': fprintf(stderr,"Warning! Keyboard Reassign not Supported.\n"); 
 	               break;
-	     default: printf("Warning! Unknown Escape Code\n"); 
+	     default: fprintf(stderr,"Warning! Unknown Escape Code\n"); 
 	              break;
 	     }
 	  }
@@ -623,7 +624,7 @@ static void gif_the_text(int animate,int blink,
 	  }
 	    if (y_position>y_size) {
 	       emergency_exit=1;
-	       printf("Error!  Scrolled past maximum y_size of %i!\n\n",y_size);
+	       fprintf(stderr,"Error!  Scrolled past maximum y_size of %i!\n\n",y_size);
 	    }
        }
     }
@@ -681,11 +682,11 @@ static void gif_the_text(int animate,int blink,
        fputc(';', out_f); /* End of Gif file */
     }
    if ((backtrack) && !(animate)) {
-      printf("Warning!  The cursor moved backwards and animated output was not selected.\n"
+      fprintf(stderr,"Warning!  The cursor moved backwards and animated output was not selected.\n"
 	     "          For proper output, you might want to try again with --animate\n\n"); 
    }
    if ((use_blink)&&(!blink)) {
-      printf("Warning!  A blinking color code was used.  To display blinking ansis you\n"
+      fprintf(stderr,"Warning!  A blinking color code was used.  To display blinking ansis you\n"
 	     "          to run with the --blink option to create an animated gif.\n\n");
    }
    if (output_type==OUTPUT_EPS) {
@@ -697,6 +698,142 @@ static void gif_the_text(int animate,int blink,
 	
    unlink(temp_file_name);   
  
+}
+
+
+static int detect_max_y(int animate,int blink,
+			FILE *in_f,FILE *out_f,
+		        int time_delay,int x_size,int y_size,
+			int output_type) {
+   
+    unsigned char temp_char;
+
+    unsigned char escape_code[BUFSIZ];
+      
+    int x_position,y_position,oldx_position,oldy_position;
+
+    int escape_counter,n,n2;
+
+    int backtrack=0;
+   
+    int max_y=y_size;
+
+   
+       /* Initialize the Variables */
+    x_position=1; y_position=1;
+    oldx_position=1; oldy_position=1;
+    
+    while (  ((fread(&temp_char,sizeof(temp_char),1,in_f))>0) ) {
+
+          /* Did somebody say escape?? */
+       if (temp_char==27) {
+	  fread(&temp_char,sizeof(temp_char),1,in_f);
+	     /* If after escape we have '[' we have an escape code */
+	  if (temp_char!='[') fprintf(stderr,"False Escape\n");
+	  else {
+	     escape_counter=0;
+	     while (!isalpha(temp_char)) { /* Read in the command */
+	        fread(&temp_char,sizeof(temp_char),1,in_f);
+	        escape_code[escape_counter]=temp_char;
+	        escape_counter++;
+	     }
+	     escape_code[escape_counter]='\000';
+	        /* Big 'ol switch statement to figure out what to do */
+	     switch(escape_code[escape_counter-1]) {
+	        /* Move to x,y */
+	     case 'H': 
+	     case 'f': n=parse_numbers(escape_code,1);
+	               n2=parse_numbers(escape_code,2);
+	               if ( (y_position>n) || 
+			   ((x_position>n2)&&(y_position>=n))) backtrack++;
+		       y_position=n;
+	               x_position=n2;		       
+	               break; 
+		/* Decrement Y by N */
+	     case 'A': n=parse_numbers(escape_code,1);
+		       backtrack++;
+	               y_position-=n;
+	               break;
+		/* Increment Y by N */
+	     case 'B': n=parse_numbers(escape_code,1);
+	               y_position+=n;
+	               break;
+	        /* Increment X by N */
+	     case 'C': n=parse_numbers(escape_code,1); 
+	               x_position+=n;
+	               break;
+		/* Decrement X by N */
+	     case 'D': n=parse_numbers(escape_code,1); 
+		       if (n!=255) {
+	                  backtrack++;
+		          x_position-=n;
+		          if (x_position<0) x_position=0;
+		       }
+		
+	               break;
+		/* Report Current Position */
+	     case 'R': fprintf(stderr,"Current Position: %d, %d\n",
+			      x_position,y_position); break;
+		/* Save Position */
+	     case 's': oldx_position=x_position;
+	               oldy_position=y_position;
+	               break;
+		/* Restore Position */
+	     case 'u': x_position=oldx_position;
+	               y_position=oldy_position;
+	               break;
+		/* Clear Screen and Home */
+	     case 'J': 		
+	               x_position=1;
+	               y_position=1;
+	               break;
+		/* Clear to end of line */
+	     case 'K': 		
+	               x_position=x_size; 
+	               break;
+	     default: /* normal, we ignore some cases */
+	              break;
+	     }
+	  }
+       }
+          /* If it isn't an escape code, we do this */
+       else {  
+          if (temp_char=='\n') { /* Line Feed */ 
+	     x_position=1;
+	     y_position++;
+	  }
+	  else if (temp_char=='\t') { /* Tab */
+	     x_position+=4;  
+	  }
+          else if (temp_char=='\r'); /* Skip carriage returns, as most */
+				     /* ansi's are from DOS            */
+          else {
+	     
+	        /* Where is the best place to check for wrapping? */
+	     if (x_position>x_size) {
+	        x_position=x_position%x_size;
+		y_position++;
+	     }
+
+//	     if (y_position<=y_size) {
+                x_position++;
+//	     }	     	     
+
+	  }
+             /* See if the screen has wrapped */
+          if (x_position>x_size) {
+	     x_position=x_position%x_size;
+	     y_position++;
+	  }
+	  if (y_position>max_y) {
+	     max_y=y_position;
+	  }
+       }
+    }
+   
+   fprintf(stderr,"Found maximum y of %d\n",y_position);
+
+   return max_y;
 }
 
 
@@ -743,18 +880,18 @@ vga_font *load_vga_font(char *namest,int xsize,int ysize,int numchars) {
     int i,fonty,numloop;
     vga_font *font;
    
-    char *data;
+    unsigned char *data;
    
     short int psf_id;
     char psf_mode;
     char psf_height;
    
     font=(vga_font *)malloc(sizeof(vga_font));
-    data=(char *)calloc(numchars*ysize,(sizeof(char)));
+    data=calloc(numchars*ysize,(sizeof(unsigned char)));
    
     f=fopen(namest,"r");
     if (f==NULL) {
-       printf("\nERROR loading font file %s.\n\n",namest);
+       fprintf(stderr,"\nERROR loading font file %s.\n\n",namest);
        return NULL;
     }
    
@@ -762,7 +899,7 @@ vga_font *load_vga_font(char *namest,int xsize,int ysize,int numchars) {
     /* psf files contain a magic number 0x0436 in the first word */
     if ( 0==strncmp(".psf",namest+strlen(namest)-4,4) ) {
        if (psf_id!=0x436 ) {
-	  printf("ERROR file %s is not a psf file \n",namest);
+	  fprintf(stderr,"ERROR file %s is not a psf file \n",namest);
 	  return NULL;
        }
     }
@@ -772,7 +909,7 @@ vga_font *load_vga_font(char *namest,int xsize,int ysize,int numchars) {
     fread(&psf_mode,sizeof(psf_mode),1,f);
     fread(&psf_height,sizeof(psf_height),1,f);
     if (psf_id==0x436 && (psf_mode!=0 || psf_height!=16 )) {
-       printf("ERROR unable to deal with this size of psf file \n");
+       fprintf(stderr,"ERROR unable to deal with this size of psf file \n");
        return NULL;
     }
    
@@ -810,6 +947,7 @@ int main(int argc, char **argv) {
     int option_index = 0;
     int output_type=OUTPUT_GIF;
     int font_supplied=0; 
+    int auto_ysize=0;
    
     static struct option long_options[] = {
        {"animate", 0, NULL, 'a'},
@@ -828,7 +966,7 @@ int main(int argc, char **argv) {
        {0,0,0,0}
     };
    
-   printf("Run as %s\n",argv[0]);
+   fprintf(stderr,"Run as %s\n",argv[0]);
    
        /* Check to see how run. if we were ansi2png or ansi2eps set */
        /* default output appropriately                              */
@@ -843,7 +981,7 @@ int main(int argc, char **argv) {
        switch (c) {
 	  case 'a': animate=1; break;
 	  case 'b': blink=1; break;
-	  case 'c': printf ("\nWarning! Setting alternate colors not"
+	  case 'c': fprintf (stderr,"\nWarning! Setting alternate colors not"
 			    " implemented yet.\n\n");
 	            break;
 	  case 'e': output_type=OUTPUT_EPS; break;
@@ -855,41 +993,41 @@ int main(int argc, char **argv) {
 	  case 'p': output_type=OUTPUT_PNG; break;
 	  case 't': time_delay=strtol(optarg,&endptr,10);
 	            if ( endptr == optarg ) {
-		       printf("\nError! \"%s\" is an invalid time delay.\n"
+		       fprintf(stderr,"\nError! \"%s\" is an invalid time delay.\n"
 			      "\tPlease select a delay that is an integer "
 			      "number of 1/100 of seconds.\n\n",optarg);
 	               exit(9);
 		    }
-	            printf("\nTime Delay in Animation %f seconds\n",
+	            fprintf(stderr,"\nTime Delay in Animation %f seconds\n",
 			   ((float)time_delay/100));
 	            break;
 	  case 'v': display_help(argv[0],1); break;
 	  case 'x': x_size=strtol(optarg,&endptr,10);
 	            if ( endptr == optarg ) {
-	               printf("\nError!  \"%s\" is not a valid x size.\n\n",
+	               fprintf(stderr,"\nError!  \"%s\" is not a valid x size.\n\n",
 			      optarg);
 	               exit(9);
 		    }
 	            break;
 	  case 'y': if (!strcmp(optarg,"auto")) {
-	               printf("\nError! Automatic sizing is not "
-			      "implemented yet.  Sorry.\n\n");
-	               exit(12);
+	               auto_ysize=1;
 	            } 
-	            y_size=strtol(optarg,&endptr,10);
-	            if ( endptr == optarg ) {
-		       printf("\nError!  \"%s\" is not a valid y size.\n\n",
+	            else {
+	               y_size=strtol(optarg,&endptr,10);
+	               if ( endptr == optarg ) {
+		          fprintf(stderr,"\nError!  \"%s\" is not a valid y size.\n\n",
 			      optarg); 
-		       exit(9);
+		          exit(9);
+		       }
 		    }
 	            break;
-	  default : printf("\nError! Bad command line option!\n\n"); 
+	  default : fprintf(stderr,"\nError! Bad command line option!\n\n"); 
 	            exit(5);
        }
     }
    
     if (animate && blink) {
-       printf("Error!  Cannot do blink and animate simultaneously!\n\n");
+       fprintf(stderr,"Error!  Cannot do blink and animate simultaneously!\n\n");
        exit(1);
     }
     
@@ -900,19 +1038,24 @@ int main(int argc, char **argv) {
     if (optind<argc) {	
        input_name=strdup(argv[optind]);
        if ( (input_f=fopen(input_name,"r"))==NULL) {
-          printf("\nInvalid Input File: %s\n",input_name);
+          fprintf(stderr,"\nInvalid Input File: %s\n",input_name);
           return 1;
        } 
     }
     else {
        fprintf(stderr,"Using standard input...\n");
        input_f=stdin;
+       
+       if (auto_ysize) {
+	  fprintf(stderr,"Error!  auto ysize not supported when using stdin\n");
+	  return 1;
+       }
     }
    
     if (optind<argc-1) {	
        output_name=strdup(argv[optind+1]);
        if ( (output_f=fopen(output_name,"wb"))==NULL){
-          printf("\nInvalid Output File: %s\n",output_name);
+          fprintf(stderr,"\nInvalid Output File: %s\n",output_name);
           return 1;    
        } 
     }
@@ -932,9 +1075,16 @@ int main(int argc, char **argv) {
        font_to_use->height=16;
        font_to_use->numchars=256;
     }
-      
+   
+    if (auto_ysize) {
+       y_size=detect_max_y(animate,blink,input_f,output_f,
+		    time_delay,x_size,y_size,output_type);
+       rewind(input_f);
+    }
+   
     gif_the_text(animate,blink,input_f,output_f,
-		 time_delay,x_size,y_size,output_type);
+		    time_delay,x_size,y_size,output_type);
+
     fclose(input_f);
 
     return 0;   
