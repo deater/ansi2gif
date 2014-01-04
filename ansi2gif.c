@@ -1,7 +1,9 @@
-/*             ----------- ansi2gif.c ------------------       *\
-\*   by Vince Weaver... Makes a gif out of "ANSI" files        */
-/*   Based on my "fontprint" program.                          *\
-\* http://www.deater.net/weave/vmwprod/ansi2gif/               */
+/*        ---------- ansi2gif.c ----------        *\
+\*                 by Vince Weaver                */
+/*             <vince _at_ deater.net>            *\
+\*        Makes an image out of "ANSI" files      */
+/*         Based on my "fontprint" program.       *\
+\*  http://www.deater.net/weave/vmwprod/ansi2gif/ */
 
 #include <stdio.h>
 #include <stdlib.h>
