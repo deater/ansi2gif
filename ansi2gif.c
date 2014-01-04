@@ -105,8 +105,8 @@ static unsigned char *attributes;
 
 static void setup_gd(FILE *out_f,int x_size,int y_size) {
 
-	im = gdImageCreate(x_size*8,y_size*16);  /* Full Screen */
-	im2 = gdImageCreate(8,16);               /* One Character */
+	im = gdImageCreateTrueColor(x_size*8,y_size*16);  /* Full Screen */
+	im2 = gdImageCreateTrueColor(8,16);               /* One Character */
 
 	/* Setup the Colors to Use for fullscreen */
 	ega_color[0] =gdImageColorAllocate(im,0x00,0x00,0x00);
@@ -479,7 +479,7 @@ static void gif_the_text(int animate,int blink,
 				    temp_file_name);
 			     exit(1);
 			  }
-			  im3=gdImageCreate((x_size-(x_position-1))*8,16);     
+			  im3=gdImageCreateTrueColor((x_size-(x_position-1))*8,16);
 			  gdImageRectangle(im3,0,0,(x_size-(x_position-1))*8,16,gdImageColorAllocate(im3,0x00,0x00,0x00));
 			  
 			  gdImageGif(im3, animate_f);
