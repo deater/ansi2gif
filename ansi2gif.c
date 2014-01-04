@@ -95,7 +95,7 @@ static int parse_numbers(unsigned char *string,int index) {
 #define FORE_CLEAR 0xf8
 #define BACK_CLEAR 0x8f
 
-static int colorF[16];
+static int ega_color[16];
 static int colorC[16];
 
 static gdImagePtr im,im2,im3;
@@ -109,22 +109,22 @@ static void setup_gd(FILE *out_f,int x_size,int y_size) {
 	im2 = gdImageCreate(8,16);               /* One Character */
 
 	/* Setup the Colors to Use for fullscreen */
-	colorF[0] =gdImageColorAllocate(im,0x00,0x00,0x00);
-	colorF[1] =gdImageColorAllocate(im,0x00,0x00,0xAA);
-	colorF[2] =gdImageColorAllocate(im,0x00,0xAA,0x00);
-	colorF[3] =gdImageColorAllocate(im,0x00,0xAA,0xAA);
-	colorF[4] =gdImageColorAllocate(im,0xAA,0x00,0x00);
-	colorF[5] =gdImageColorAllocate(im,0xAA,0x00,0xAA);
-	colorF[6] =gdImageColorAllocate(im,0xAA,0x55,0x22);
-	colorF[7] =gdImageColorAllocate(im,0xAA,0xAA,0xAA);
-	colorF[8] =gdImageColorAllocate(im,0x7d,0x7d,0x7d);
-	colorF[9] =gdImageColorAllocate(im,0x00,0x00,0xFF);
-	colorF[10]=gdImageColorAllocate(im,0x00,0xFF,0x00);
-	colorF[11]=gdImageColorAllocate(im,0x00,0xFF,0xFF);
-	colorF[12]=gdImageColorAllocate(im,0xFF,0x7d,0x7d);
-	colorF[13]=gdImageColorAllocate(im,0xFF,0x00,0xff);
-	colorF[14]=gdImageColorAllocate(im,0xFF,0xFF,0x00);
-	colorF[15]=gdImageColorAllocate(im,0xFF,0xFF,0xFF);
+	ega_color[0] =gdImageColorAllocate(im,0x00,0x00,0x00);
+	ega_color[1] =gdImageColorAllocate(im,0x00,0x00,0xAA);
+	ega_color[2] =gdImageColorAllocate(im,0x00,0xAA,0x00);
+	ega_color[3] =gdImageColorAllocate(im,0x00,0xAA,0xAA);
+	ega_color[4] =gdImageColorAllocate(im,0xAA,0x00,0x00);
+	ega_color[5] =gdImageColorAllocate(im,0xAA,0x00,0xAA);
+	ega_color[6] =gdImageColorAllocate(im,0xAA,0x55,0x22);
+	ega_color[7] =gdImageColorAllocate(im,0xAA,0xAA,0xAA);
+	ega_color[8] =gdImageColorAllocate(im,0x7d,0x7d,0x7d);
+	ega_color[9] =gdImageColorAllocate(im,0x00,0x00,0xFF);
+	ega_color[10]=gdImageColorAllocate(im,0x00,0xFF,0x00);
+	ega_color[11]=gdImageColorAllocate(im,0x00,0xFF,0xFF);
+	ega_color[12]=gdImageColorAllocate(im,0xFF,0x7d,0x7d);
+	ega_color[13]=gdImageColorAllocate(im,0xFF,0x00,0xff);
+	ega_color[14]=gdImageColorAllocate(im,0xFF,0xFF,0x00);
+	ega_color[15]=gdImageColorAllocate(im,0xFF,0xFF,0xFF);
 
 	/* Setup the Colors to Use for character.  Is this needed? */
 	colorC[0] =gdImageColorAllocate(im2,0x00,0x00,0x00);
@@ -149,22 +149,22 @@ static void setup_gd(FILE *out_f,int x_size,int y_size) {
 
 static void setup_eps(FILE *out_f,int x_size, int y_size) {
 
-	colorF[0] =(0x00<<16)+(0x00<<8)+0x00;
-	colorF[1] =(0x00<<16)+(0x00<<8)+0xAA;
-	colorF[2] =(0x00<<16)+(0xAA<<8)+0x00;
-	colorF[3] =(0x00<<16)+(0xAA<<8)+0xAA;
-	colorF[4] =(0xAA<<16)+(0x00<<8)+0x00;
-	colorF[5] =(0xAA<<16)+(0x00<<8)+0xAA;
-	colorF[6] =(0xAA<<16)+(0x55<<8)+0x22;
-	colorF[7] =(0xAA<<16)+(0xAA<<8)+0xAA;
-	colorF[8] =(0x7d<<16)+(0x7d<<8)+0x7d;
-	colorF[9] =(0x00<<16)+(0x00<<8)+0xFF;
-	colorF[10]=(0x00<<16)+(0xFF<<8)+0x00;
-	colorF[11]=(0x00<<16)+(0xFF<<8)+0xFF;
-	colorF[12]=(0xFF<<16)+(0x7d<<8)+0x7d;
-	colorF[13]=(0xFF<<16)+(0x00<<8)+0xff;
-	colorF[14]=(0xFF<<16)+(0xFF<<8)+0x00;
-	colorF[15]=(0xFF<<16)+(0xFF<<8)+0xFF;
+	ega_color[0] =(0x00<<16)+(0x00<<8)+0x00;
+	ega_color[1] =(0x00<<16)+(0x00<<8)+0xAA;
+	ega_color[2] =(0x00<<16)+(0xAA<<8)+0x00;
+	ega_color[3] =(0x00<<16)+(0xAA<<8)+0xAA;
+	ega_color[4] =(0xAA<<16)+(0x00<<8)+0x00;
+	ega_color[5] =(0xAA<<16)+(0x00<<8)+0xAA;
+	ega_color[6] =(0xAA<<16)+(0x55<<8)+0x22;
+	ega_color[7] =(0xAA<<16)+(0xAA<<8)+0xAA;
+	ega_color[8] =(0x7d<<16)+(0x7d<<8)+0x7d;
+	ega_color[9] =(0x00<<16)+(0x00<<8)+0xFF;
+	ega_color[10]=(0x00<<16)+(0xFF<<8)+0x00;
+	ega_color[11]=(0x00<<16)+(0xFF<<8)+0xFF;
+	ega_color[12]=(0xFF<<16)+(0x7d<<8)+0x7d;
+	ega_color[13]=(0xFF<<16)+(0x00<<8)+0xff;
+	ega_color[14]=(0xFF<<16)+(0xFF<<8)+0x00;
+	ega_color[15]=(0xFF<<16)+(0xFF<<8)+0xFF;
 
 	fprintf(out_f,"%%!PS-Adobe-3.0 EPSF-3.0\n");
 	fprintf(out_f,"%%%%Creator: ansi2eps\n");
@@ -213,13 +213,13 @@ static void display_eps(FILE *out_f,int output_type,int x_size,int y_size) {
 	x=0;
 	y=0;
 	len=0;
-	old_color=colorF[(attributes[0]&0xf0)>>4];
+	old_color=ega_color[(attributes[0]&0xf0)>>4];
 
 	yloc=(y_size*YFONTSIZE)-(YFONTSIZE*y)-YFONTSIZE;
 	fprintf(out_f," %d %d moveto\n",0,yloc);
 	while(y<y_size) {
 
-		back=colorF[ (attributes[x+(y*x_size)]&0xf0)>>4];
+		back=ega_color[ (attributes[x+(y*x_size)]&0xf0)>>4];
 		if ((back!=old_color) || (x>=x_size)) {
 			int_to_triple(old_color,out_f);
 			fprintf(out_f," setrgbcolor\n");
@@ -247,13 +247,13 @@ static void display_eps(FILE *out_f,int output_type,int x_size,int y_size) {
 	y=0;
 	len=0;
 	old=screen[0];
-	old_color=colorF[attributes[0]&0xf];
+	old_color=ega_color[attributes[0]&0xf];
 	yloc=(y_size*YFONTSIZE)-(YFONTSIZE*y)-YFONTSIZE;
 	fprintf(out_f," %d %d moveto\n",0,yloc);   
 
 	while(y<y_size) {
 		ch=screen[x+(y*x_size)];
-		fore=colorF[attributes[x+(y*x_size)]&0xf];
+		fore=ega_color[attributes[x+(y*x_size)]&0xf];
 		if ((ch!=old) || (fore!=old_color) || (x>=x_size)) {
 
 			int_to_triple(old_color,out_f);
@@ -300,11 +300,11 @@ static void display_gd(FILE *out_f,int output_type,int x_size,int y_size) {
 		    (font_to_use->font_data[(screen[x+(y*x_size)]*16)+yy]) &
 	            (128>>xx) ) {
 		    gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,
-				    colorF[attributes[x+(y*x_size)]&0x0f]);
+				    ega_color[attributes[x+(y*x_size)]&0x0f]);
 	       }
                else {
 		    gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,
-				    colorF[(attributes[x+(y*x_size)]&0xf0)>>4]);
+				    ega_color[(attributes[x+(y*x_size)]&0xf0)>>4]);
 	       }
 				}
 			}
@@ -374,7 +374,7 @@ static void gif_the_text(int animate,int blink,
 	  exit(1);
        }
           /* Clear Screen */
-       gdImageRectangle(im,0,0,x_size*8,y_size*16,colorF[0]);
+       gdImageRectangle(im,0,0,x_size*8,y_size*16,ega_color[0]);
 			     
        gdImageGif(im, animate_f);
        fclose(animate_f);
@@ -653,19 +653,19 @@ static void gif_the_text(int animate,int blink,
 	                   (128>>xx) ) {
 	                 if ((attributes[x+(y*x_size)]&0x80)) {
 		            if (i) {
-                               gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,colorF[attributes[x+(y*x_size)]&0x0f]);
+                               gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,ega_color[attributes[x+(y*x_size)]&0x0f]);
 		            }
 		            else {
-			       gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,colorF[(attributes[x+(y*x_size)]&0x70)>>4]);
+			       gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,ega_color[(attributes[x+(y*x_size)]&0x70)>>4]);
 			    }
 
 			 }
 	                 else {
-			    gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,colorF[attributes[x+(y*x_size)]&0x0f]);
+			    gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,ega_color[attributes[x+(y*x_size)]&0x0f]);
 			 }
 		      }
 		      else {
-			 gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,colorF[(attributes[x+(y*x_size)]&0x70)>>4]);
+			 gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,ega_color[(attributes[x+(y*x_size)]&0x70)>>4]);
 		      }
 		   }
 		}
