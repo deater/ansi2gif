@@ -347,6 +347,7 @@ static void gif_the_text(int animate,int blink,
 	int x_position,y_position,oldx_position,oldy_position;
 	int color=DEFAULT,x,y,emergency_exit=0,i;
 	int escape_counter,n,n2,c,invisible=0,xx,yy;
+	int already_print_color_warning=0;
 
 	int backtrack=0,use_blink=0;
 
@@ -641,7 +642,10 @@ static void gif_the_text(int animate,int blink,
 						/* 24-bit color support */
 						case 38:
 						case 48:
-							fprintf(stderr,"Warning!  Unsupported 256 or 24-bit color mode!\n");
+							if (!already_print_color_warning) {
+								fprintf(stderr,"Warning!  Unsupported 256 or 24-bit color mode!\n");
+								already_print_color_warning=1;
+							}
 							break;
 						default:
 							fprintf(stderr,"Warning! Invalid Color %d!\n\n",c);
