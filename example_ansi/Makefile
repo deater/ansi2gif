@@ -11,7 +11,11 @@ all:	\
 	bl-mekka.gif \
 	16color.png \
 	16color.gif \
-	16color.eps
+	16color.eps \
+	256color.gif \
+	256color.png \
+	256color.eps
+
 
 16color.png:	16color.ans
 	../ansi2gif 16color.ans 16color.png
@@ -21,6 +25,16 @@ all:	\
 
 16color.eps:	16color.ans
 	../ansi2gif 16color.ans 16color.eps
+
+
+256color.png:	256color.ans
+	../ansi2gif 256color.ans 256color.png
+
+256color.gif:	16color.ans
+	../ansi2gif 256color.ans 256color.gif
+
+256color.eps:	256color.ans
+	../ansi2gif 256color.ans 256color.eps
 
 
 
