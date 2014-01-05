@@ -1070,7 +1070,7 @@ int main(int argc, char **argv) {
 		{0,0,0,0}
 	};
 
-	fprintf(stderr,"Run as %s\n",argv[0]);
+//	fprintf(stderr,"Run as %s\n",argv[0]);
 
 	/* Check to see how run. if we were ansi2png or ansi2eps set */
 	/* default output appropriately                              */
@@ -1168,6 +1168,20 @@ int main(int argc, char **argv) {
 		if ( (output_f=fopen(output_name,"wb"))==NULL){
 			fprintf(stderr,"\nInvalid Output File: %s\n",output_name);
 			return 1;
+		}
+
+		/* Autodetect output filetype */
+		if (strlen(output_name)>4) {
+			if (!strcmp(output_name+(strlen(output_name)-4),".png")) {
+				output_type=OUTPUT_PNG;
+			}
+			if (!strcmp(output_name+(strlen(output_name)-4),".eps")) {
+				output_type=OUTPUT_EPS;
+			}
+			if (!strcmp(output_name+(strlen(output_name)-4),".gif")) {
+				output_type=OUTPUT_GIF;
+			}
+
 		}
 	}
 	else {
