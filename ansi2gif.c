@@ -331,6 +331,146 @@ static void finish_eps(FILE *out_f) {
 	fclose(out_f);
 }
 
+static int use_blink=0,invisible=0;
+
+static int parse_color(unsigned char *escape_code, int current_color) {
+
+	int n,n2,c,color=current_color;
+	static int already_print_color_warning=0;
+
+	n=parse_numbers(escape_code,0);
+	for(n2=1;n2<n+1;n2++) {
+		c=parse_numbers(escape_code,n2);
+		switch(c) {
+
+		/* Normal */
+		case 0:
+			color=DEFAULT;
+			break;
+
+			/* BOLD */
+		case 1:
+			color|=INTENSE;
+			break;
+
+			/* Underline */
+		case 4:
+			fprintf(stderr,"Warning!  Underline not supported!\n\n");
+			break;
+
+			/* Blink */
+		case 5:
+			color|=BLINK;
+			use_blink++;
+			break;
+
+			/* Reverse */
+		case 7:
+			color=(color>>4)+(color<<4);
+			break;
+
+			/* Invisible */
+		case 8:
+			invisible=1;
+			fprintf(stderr,"Warning! Invisible!\n\n");
+			break;
+
+						/* Black Foreground */
+						case 30:
+							color&=FORE_CLEAR;
+							break;
+
+						/* Red Foreground */
+						case 31:
+							color&=FORE_CLEAR;
+							color|=FORE_RED;
+							break;
+
+						/* Green Foreground */
+						case 32:
+							color&=FORE_CLEAR;
+							color|=FORE_GREEN;
+							break;
+
+						/* Yellow Foreground */
+						case 33:
+							color&=FORE_CLEAR;
+							color|=FORE_RED;
+							color|=FORE_GREEN;
+							break;
+
+						/* Blue Foreground */
+						case 34:
+							color&=FORE_CLEAR;
+							color|=FORE_BLUE;
+							break;
+			   case 35: color&=FORE_CLEAR; /* Purple Fore */
+			            color|=FORE_BLUE;
+			            color|=FORE_RED;
+			            break;
+			   case 36: color&=FORE_CLEAR; /* Cyan Fore */
+			           color|=FORE_BLUE;
+			           color|=FORE_GREEN;
+			           break;
+
+					/* "default" foreground */
+					/* implementation defined */
+					case 39:
+
+			   case 37: color&=FORE_CLEAR; /* White Fore */
+			           color|=FORE_RED;
+			           color|=FORE_GREEN;
+			           color|=FORE_BLUE;  break;
+
+
+
+					/* "default" background */
+					/* implementation defined */
+					case 49:
+
+			   case 40: color&=BACK_CLEAR; /* Black Back */
+			            break;
+			   case 41: color&=BACK_CLEAR; /* Red Back */
+			            color|=BACK_RED;
+			            break;
+			   case 42: color&=BACK_CLEAR; /* Green Back */
+			            color|=BACK_GREEN;
+			            break;
+			   case 43: color&=BACK_CLEAR; /* Yellow Back */
+			            color|=BACK_GREEN;
+			            color|=BACK_RED;
+			            break;
+			   case 44: color&=BACK_CLEAR; /* Blue Back */
+			            color|=BACK_BLUE;
+			            break;
+			   case 45: color&=BACK_CLEAR; /* Purple Back */
+			            color|=BACK_BLUE;
+			            color|=BACK_RED;
+			            break;
+			   case 46: color&=BACK_CLEAR; /* Cyan Back */
+			           color|=BACK_BLUE;
+			           color|=BACK_GREEN;
+			           break;
+			   case 47: color&=BACK_CLEAR; /* White Back */
+			           color|=BACK_RED;
+			           color|=BACK_GREEN;
+			           color|=BACK_BLUE;  break;
+
+						/* 24-bit color support */
+						case 38:
+						case 48:
+							if (!already_print_color_warning) {
+								fprintf(stderr,"Warning!  Unsupported 256 or 24-bit color mode!\n");
+								already_print_color_warning=1;
+							}
+							break;
+						default:
+							fprintf(stderr,"Warning! Invalid Color %d!\n\n",c);
+		}
+	}
+	return color;
+}
+
 
 static void gif_the_text(int animate,int blink,
 			FILE *in_f,FILE *out_f,
@@ -346,10 +486,9 @@ static void gif_the_text(int animate,int blink,
 
 	int x_position,y_position,oldx_position,oldy_position;
 	int color=DEFAULT,x,y,emergency_exit=0,i;
-	int escape_counter,n,n2,c,invisible=0,xx,yy;
-	int already_print_color_warning=0;
+	int escape_counter,n,n2,xx,yy;
 
-	int backtrack=0,use_blink=0;
+	int backtrack=0;
 
 	screen=calloc(x_size*y_size,sizeof(unsigned char));
 	attributes=calloc(x_size*y_size,sizeof(unsigned int));
@@ -521,136 +660,7 @@ static void gif_the_text(int animate,int blink,
 
 				/* Oh what fun, figuring out colors */
 				case 'm':
-					n=parse_numbers(escape_code,0);
-					for(n2=1;n2<n+1;n2++) {
-						c=parse_numbers(escape_code,n2);
-						switch(c) {
-
-						/* Normal */
-						case 0:
-							color=DEFAULT;
-							break;
-
-						/* BOLD */
-						case 1:
-							color|=INTENSE;
-							break;
-
-						/* Underline */
-						case 4:
-							fprintf(stderr,"Warning!  Underline not supported!\n\n");
-							break;
-
-						/* Blink */
-						case 5:
-							color|=BLINK;
-							use_blink++;
-							break;
-
-						/* Reverse */
-						case 7:
-							color=(color>>4)+(color<<4);
-							break;
-
-						/* Invisible */
-						case 8:
-							invisible=1;
-							fprintf(stderr,"Warning! Invisible!\n\n");
-							break;
-
-						/* Black Foreground */
-						case 30:
-							color&=FORE_CLEAR;
-							break;
-
-						/* Red Foreground */
-						case 31:
-							color&=FORE_CLEAR;
-							color|=FORE_RED;
-							break;
-
-						/* Green Foreground */
-						case 32:
-							color&=FORE_CLEAR;
-							color|=FORE_GREEN;
-							break;
-
-						/* Yellow Foreground */
-						case 33:
-							color&=FORE_CLEAR;
-							color|=FORE_RED;
-							color|=FORE_GREEN;
-							break;
-
-						/* Blue Foreground */
-						case 34:
-							color&=FORE_CLEAR;
-							color|=FORE_BLUE;
-							break;
-			   case 35: color&=FORE_CLEAR; /* Purple Fore */
-			            color|=FORE_BLUE;
-			            color|=FORE_RED;
-			            break;
-			   case 36: color&=FORE_CLEAR; /* Cyan Fore */
-			           color|=FORE_BLUE;
-			           color|=FORE_GREEN;
-			           break;
-
-					/* "default" foreground */
-					/* implementation defined */
-					case 39:
-
-			   case 37: color&=FORE_CLEAR; /* White Fore */
-			           color|=FORE_RED;
-			           color|=FORE_GREEN;
-			           color|=FORE_BLUE;  break;
-
-
-
-					/* "default" background */
-					/* implementation defined */
-					case 49:
-
-			   case 40: color&=BACK_CLEAR; /* Black Back */
-			            break;
-			   case 41: color&=BACK_CLEAR; /* Red Back */
-			            color|=BACK_RED;
-			            break;
-			   case 42: color&=BACK_CLEAR; /* Green Back */
-			            color|=BACK_GREEN;
-			            break;
-			   case 43: color&=BACK_CLEAR; /* Yellow Back */
-			            color|=BACK_GREEN;
-			            color|=BACK_RED;
-			            break;
-			   case 44: color&=BACK_CLEAR; /* Blue Back */
-			            color|=BACK_BLUE;
-			            break;
-			   case 45: color&=BACK_CLEAR; /* Purple Back */
-			            color|=BACK_BLUE;
-			            color|=BACK_RED;
-			            break;
-			   case 46: color&=BACK_CLEAR; /* Cyan Back */
-			           color|=BACK_BLUE;
-			           color|=BACK_GREEN;
-			           break;
-			   case 47: color&=BACK_CLEAR; /* White Back */
-			           color|=BACK_RED;
-			           color|=BACK_GREEN;
-			           color|=BACK_BLUE;  break;
-
-						/* 24-bit color support */
-						case 38:
-						case 48:
-							if (!already_print_color_warning) {
-								fprintf(stderr,"Warning!  Unsupported 256 or 24-bit color mode!\n");
-								already_print_color_warning=1;
-							}
-							break;
-						default:
-							fprintf(stderr,"Warning! Invalid Color %d!\n\n",c);
-						}
-					}
+					color=parse_color(escape_code,color);
 					break;
 
 				/* Set screen mode */
