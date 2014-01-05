@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -O2 -Wall
 LFLAGS =
 
-all:	16color 256color
+all:	16color 256color 256color_oflo
 
 
 16color:	16color.o
@@ -19,6 +19,13 @@ all:	16color 256color
 	$(CC) $(CFLAGS) -c 256color.c
 
 
+256color_oflo:	256color_oflo.o
+	$(CC) $(LFLAGS) -o 256color_oflo 256color_oflo.o
+
+256color_oflo.o:	256color_oflo.c
+	$(CC) $(CFLAGS) -c 256color_oflo.c
+
+
 clean:
-	rm -f *~ *.o 16color 256color
+	rm -f *~ *.o 16color 256color 256color_oflo
 

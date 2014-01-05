@@ -14,7 +14,9 @@ all:	\
 	16color.eps \
 	256color.gif \
 	256color.png \
-	256color.eps
+	256color.eps \
+	256color_oflo.gif \
+	256color_oflo.png
 
 
 16color.png:	16color.ans
@@ -30,11 +32,18 @@ all:	\
 256color.png:	256color.ans
 	../ansi2gif 256color.ans 256color.png
 
-256color.gif:	16color.ans
+256color.gif:	256color.ans
 	../ansi2gif 256color.ans 256color.gif
 
 256color.eps:	256color.ans
 	../ansi2gif 256color.ans 256color.eps
+
+
+256color_oflo.png:	256color_oflo.ans
+	../ansi2gif 256color_oflo.ans 256color_oflo.png
+
+256color_oflo.gif:	256color_oflo.ans
+	../ansi2gif 256color_oflo.ans 256color_oflo.gif
 
 
 
