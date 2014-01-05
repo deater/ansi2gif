@@ -594,10 +594,22 @@ static void gif_the_text(int animate,int blink,
 			           color|=FORE_BLUE;
 			           color|=FORE_GREEN;
 			           break;
+
+					/* "default" foreground */
+					/* implementation defined */
+					case 39:
+
 			   case 37: color&=FORE_CLEAR; /* White Fore */
 			           color|=FORE_RED;
 			           color|=FORE_GREEN;
 			           color|=FORE_BLUE;  break;
+
+
+
+					/* "default" background */
+					/* implementation defined */
+					case 49:
+
 			   case 40: color&=BACK_CLEAR; /* Black Back */
 			            break;
 			   case 41: color&=BACK_CLEAR; /* Red Back */
