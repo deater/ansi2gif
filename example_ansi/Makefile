@@ -8,7 +8,20 @@ all:	\
 	ansi1.png \
 	ansi1.gif \
 	bl-mekka.png \
-	bl-mekka.gif
+	bl-mekka.gif \
+	16color.png \
+	16color.gif \
+	16color.eps
+
+16color.png:	16color.ans
+	../ansi2gif 16color.ans 16color.png
+
+16color.gif:	16color.ans
+	../ansi2gif 16color.ans 16color.gif
+
+16color.eps:	16color.ans
+	../ansi2gif 16color.ans 16color.eps
+
 
 
 ansi1.png:	ansi1.ans
