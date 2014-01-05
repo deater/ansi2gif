@@ -249,7 +249,7 @@ static void display_eps(FILE *out_f,int output_type,int x_size,int y_size) {
 	old=screen[0];
 	old_color=ega_color[attributes[0]&0xf];
 	yloc=(y_size*YFONTSIZE)-(YFONTSIZE*y)-YFONTSIZE;
-	fprintf(out_f," %d %d moveto\n",0,yloc);   
+	fprintf(out_f," %d %d moveto\n",0,yloc);
 
 	while(y<y_size) {
 		ch=screen[x+(y*x_size)];
@@ -336,191 +336,256 @@ static void gif_the_text(int animate,int blink,
 			FILE *in_f,FILE *out_f,
 		        int time_delay,int x_size,int y_size,
 			int output_type) {
-   
-    FILE *animate_f=NULL;
-    unsigned char temp_char;
+
+	FILE *animate_f=NULL;
+	unsigned char temp_char;
 
 
-    unsigned char escape_code[BUFSIZ];
-    char temp_file_name[BUFSIZ];
-      
-    int x_position,y_position,oldx_position,oldy_position;
-    int color=DEFAULT,x,y,emergency_exit=0,i;
-    int escape_counter,n,n2,c,invisible=0,xx,yy;
+	unsigned char escape_code[BUFSIZ];
+	char temp_file_name[BUFSIZ];
 
-    int backtrack=0,use_blink=0;
-   
-    screen=(unsigned char *)calloc(x_size*y_size,sizeof(unsigned char));
-    attributes=(unsigned char *)calloc(x_size*y_size,sizeof(unsigned char));
-   
-    if (output_type==OUTPUT_EPS) {
-       setup_eps(out_f,x_size,y_size);
-    }
-    else {
-       setup_gd(out_f,x_size,y_size);
-    }
+	int x_position,y_position,oldx_position,oldy_position;
+	int color=DEFAULT,x,y,emergency_exit=0,i;
+	int escape_counter,n,n2,c,invisible=0,xx,yy;
 
-    if ((animate||blink) && (output_type!=OUTPUT_GIF)) {
-       fprintf(stderr,"Error!  Can only animate if output is gif!\n");
-       exit(-1);
-    }
-   
-    if (animate) {
-       sprintf(temp_file_name,"/tmp/ansi2gif_%i.gif",getpid());
-         
-       if ( (animate_f=fopen(temp_file_name,"wb"))==NULL) {
-	  fprintf(stderr,"Error!  Cannot open file %s to store temporary "
-		 "animation info!\n\n",temp_file_name);
-	  exit(1);
-       }
-          /* Clear Screen */
-       gdImageRectangle(im,0,0,x_size*8,y_size*16,ega_color[0]);
-			     
-       gdImageGif(im, animate_f);
-       fclose(animate_f);
-       
-       animate_gif(out_f,temp_file_name,1,0,0,time_delay,0); 
-    }
-    
-       /* Clear the memory used to store the image */
-    for(y=0;y<y_size;y++) {   
-       for(x=0;x<x_size;x++) {	
-          screen[x+(y*x_size)]=' ';
-	  attributes[x+(y*x_size)]=BLACK;
-       }    
-    }
-   
-   
-       /* Initialize the Variables */
-    x_position=1; y_position=1;
-    oldx_position=1; oldy_position=1;
-    
-    while (  ((fread(&temp_char,sizeof(temp_char),1,in_f))>0) 
-	     && (!emergency_exit) ) {
+	int backtrack=0,use_blink=0;
 
-          /* Did somebody say escape?? */
-       if (temp_char==27) {
-	  fread(&temp_char,sizeof(temp_char),1,in_f);
-	     /* If after escape we have '[' we have an escape code */
-	  if (temp_char!='[') fprintf(stderr,"False Escape\n");
-	  else {
-	     escape_counter=0;
-	     while (!isalpha(temp_char)) { /* Read in the command */
-	        fread(&temp_char,sizeof(temp_char),1,in_f);
-	        escape_code[escape_counter]=temp_char;
-	        escape_counter++;
-	     }
-	     escape_code[escape_counter]='\000';
-	        /* Big 'ol switch statement to figure out what to do */
-	     switch(escape_code[escape_counter-1]) {
-	        /* Move to x,y */
-	     case 'H': 
-	     case 'f': n=parse_numbers(escape_code,1);
-	               n2=parse_numbers(escape_code,2);
-	               if ( (y_position>n) || 
-			   ((x_position>n2)&&(y_position>=n))) backtrack++;
-		       y_position=n;
-	               x_position=n2;		       
-	               break; 
-		/* Decrement Y by N */
-	     case 'A': n=parse_numbers(escape_code,1);
-		       backtrack++;
-	               y_position-=n;
-	               break;
-		/* Increment Y by N */
-	     case 'B': n=parse_numbers(escape_code,1);
-	               y_position+=n;
-	               break;
-	        /* Increment X by N */
-	     case 'C': n=parse_numbers(escape_code,1); 
-	               x_position+=n;
-	               break;
-		/* Decrement X by N */
-	     case 'D': n=parse_numbers(escape_code,1); 
-		       if (n!=255) {
-	                  backtrack++;
-		          x_position-=n;
-		          if (x_position<0) x_position=0;
-		       }
-		
-	               break;
-		/* Report Current Position */
-	     case 'R': fprintf(stderr,"Current Position: %d, %d\n",
-			      x_position,y_position); break;
-		/* Save Position */
-	     case 's': oldx_position=x_position;
-	               oldy_position=y_position;
-	               break;
-		/* Restore Position */
-	     case 'u': x_position=oldx_position;
-	               y_position=oldy_position;
-	               break;
-		/* Clear Screen and Home */
-	     case 'J': for (x=0;x<x_size;x++)
-		           for (y=0;y<y_size;y++)
-		               screen[x+(y*x_size)]=' ';
-	               x_position=1;
-	               y_position=1;
-		       if (animate) {
-			  if ( (animate_f=fopen(temp_file_name,"wb"))==NULL) {
-			     fprintf(stderr,"Error!  Cannot open file %s to store temporary animation info.\n",
-				    temp_file_name);
-			     exit(1);
-			  }
-			  gdImageGif(im, animate_f);
-			  fclose(animate_f);
-			  animate_gif(out_f,temp_file_name,0,0,0,time_delay,0);  
-		       }
-	               break;
-		/* Clear to end of line */
-	     case 'K': if (animate) {
-			  if ( (animate_f=fopen(temp_file_name,"wb"))==NULL) {
-			     fprintf(stderr,"Error!  Cannot open file %s to store temporary animation info.\n",
-				    temp_file_name);
-			     exit(1);
-			  }
-			  im3=gdImageCreateTrueColor((x_size-(x_position-1))*8,16);
-			  gdImageRectangle(im3,0,0,(x_size-(x_position-1))*8,16,gdImageColorAllocate(im3,0x00,0x00,0x00));
-			  
-			  gdImageGif(im3, animate_f);
-			  fclose(animate_f);
-			  gdImageDestroy(im3);
-			  animate_gif(out_f,temp_file_name,0,(x_position-1)*8,(y_position-1)*16,time_delay,0);  
-		       }
-		       if (y_position<y_size) 
-		       for(x=x_position;x<x_size;x++) 
-		          screen[x+(y_position*x_size)]=' ';
-	               x_position=x_size; 
-	               break;
-		/* Oh what fun, figuring out colors */
-	     case 'm': /* printf("Color\n"); */
-	               n=parse_numbers(escape_code,0);
-	               for(n2=1;n2<n+1;n2++) {
-			  c=parse_numbers(escape_code,n2);
-			  switch(c) {
-			   case 0: color=DEFAULT; break; /* Normal */
-			   case 1: color|=INTENSE; break; /* BOLD */
-			   case 4: fprintf(stderr,"Warning!  Underline not supported!\n\n");
-			           break;
-			   case 5: color|=BLINK; use_blink++; break; /* BLINK */
-			   case 7: color=(color>>4)+(color<<4); /* REVERSE */
-			           break;
-			   case 8: invisible=1; fprintf(stderr,"Warning! Invisible!\n\n"); break;
-			   case 30: color&=FORE_CLEAR; /* Black Fore */
-			            break;
-			   case 31: color&=FORE_CLEAR; /* Red Fore */
-			            color|=FORE_RED;
-			            break;
-			   case 32: color&=FORE_CLEAR; /* Green Fore */
-			            color|=FORE_GREEN;
-			            break;
-			   case 33: color&=FORE_CLEAR; /* Yellow Fore */
-			            color|=FORE_RED;
-			            color|=FORE_GREEN;
-			            break;
-			   case 34: color&=FORE_CLEAR; /* Blue Fore */
-			            color|=FORE_BLUE;
-			            break;
+	screen=(unsigned char *)calloc(x_size*y_size,sizeof(unsigned char));
+	attributes=(unsigned char *)calloc(x_size*y_size,sizeof(unsigned char));
+
+	if (output_type==OUTPUT_EPS) {
+		setup_eps(out_f,x_size,y_size);
+	}
+	else {
+		setup_gd(out_f,x_size,y_size);
+	}
+
+	if ((animate||blink) && (output_type!=OUTPUT_GIF)) {
+		fprintf(stderr,"Error!  Can only animate if output is gif!\n");
+		exit(-1);
+	}
+
+	if (animate) {
+		/* FIXME: use mkstemp()? */
+		sprintf(temp_file_name,"/tmp/ansi2gif_%i.gif",getpid());
+
+		if ( (animate_f=fopen(temp_file_name,"wb"))==NULL) {
+			fprintf(stderr,"Error!  Cannot open file %s to store temporary "
+				"animation info!\n\n",temp_file_name);
+			exit(1);
+		}
+
+		/* Clear Screen */
+		gdImageRectangle(im,0,0,x_size*8,y_size*16,ega_color[0]);
+
+		gdImageGif(im, animate_f);
+		fclose(animate_f);
+
+		animate_gif(out_f,temp_file_name,1,0,0,time_delay,0);
+	}
+
+	/* Clear the memory used to store the image */
+	for(y=0;y<y_size;y++) {
+		for(x=0;x<x_size;x++) {
+			screen[x+(y*x_size)]=' ';
+			attributes[x+(y*x_size)]=BLACK;
+		}
+	}
+
+	/* Initialize the Variables */
+	x_position=1; y_position=1;
+	oldx_position=1; oldy_position=1;
+
+	/* FIXME: fgetc()? */
+	while (  ((fread(&temp_char,sizeof(temp_char),1,in_f))>0)
+		&& (!emergency_exit) ) {
+
+		/* Did somebody say escape?? */
+		if (temp_char==27) {
+			fread(&temp_char,sizeof(temp_char),1,in_f);
+			/* If after escape we have '[' we have an escape code */
+			if (temp_char!='[') fprintf(stderr,"False Escape\n");
+			else {
+				escape_counter=0;
+
+				/* Read in the command */
+				while (!isalpha(temp_char)) {
+					fread(&temp_char,sizeof(temp_char),1,in_f);
+					escape_code[escape_counter]=temp_char;
+					escape_counter++;
+				}
+
+				escape_code[escape_counter]='\000';
+				/* Big 'ol switch statement to figure out what to do */
+				switch(escape_code[escape_counter-1]) {
+
+				/* Move to x,y */
+				case 'H':
+				case 'f':
+					n=parse_numbers(escape_code,1);
+					n2=parse_numbers(escape_code,2);
+					if ( (y_position>n) ||
+						((x_position>n2)&&(y_position>=n))) backtrack++;
+					y_position=n;
+					x_position=n2;
+					break;
+
+				/* Decrement Y by N */
+				case 'A':
+					n=parse_numbers(escape_code,1);
+					backtrack++;
+					y_position-=n;
+					break;
+
+				/* Increment Y by N */
+				case 'B':
+					n=parse_numbers(escape_code,1);
+					y_position+=n;
+					break;
+
+				/* Increment X by N */
+				case 'C':
+					n=parse_numbers(escape_code,1);
+					x_position+=n;
+					break;
+
+				/* Decrement X by N */
+				case 'D':
+					n=parse_numbers(escape_code,1);
+					if (n!=255) {
+						backtrack++;
+						x_position-=n;
+						if (x_position<0) x_position=0;
+					}
+					break;
+
+				/* Report Current Position */
+				case 'R':
+					fprintf(stderr,"Current Position: %d, %d\n",
+						x_position,y_position);
+					break;
+
+				/* Save Position */
+				case 's':
+					oldx_position=x_position;
+					oldy_position=y_position;
+					break;
+
+				/* Restore Position */
+				case 'u':
+					x_position=oldx_position;
+					y_position=oldy_position;
+					break;
+
+				/* Clear Screen and Home */
+				case 'J':
+					for (x=0;x<x_size;x++)
+						for (y=0;y<y_size;y++)
+							screen[x+(y*x_size)]=' ';
+					x_position=1;
+					y_position=1;
+					if (animate) {
+						if ( (animate_f=fopen(temp_file_name,"wb"))==NULL) {
+							fprintf(stderr,"Error!  Cannot open file %s to store temporary animation info.\n",
+								temp_file_name);
+							exit(1);
+						}
+						gdImageGif(im, animate_f);
+						fclose(animate_f);
+						animate_gif(out_f,temp_file_name,0,0,0,time_delay,0);
+					}
+					break;
+
+				/* Clear to end of line */
+				case 'K':
+					if (animate) {
+						if ( (animate_f=fopen(temp_file_name,"wb"))==NULL) {
+							fprintf(stderr,"Error!  Cannot open file %s to store temporary animation info.\n",
+								temp_file_name);
+							exit(1);
+						}
+						im3=gdImageCreateTrueColor((x_size-(x_position-1))*8,16);
+						gdImageRectangle(im3,0,0,(x_size-(x_position-1))*8,16,gdImageColorAllocate(im3,0x00,0x00,0x00));
+
+						gdImageGif(im3, animate_f);
+						fclose(animate_f);
+						gdImageDestroy(im3);
+						animate_gif(out_f,temp_file_name,0,(x_position-1)*8,(y_position-1)*16,time_delay,0);  
+					}
+					if (y_position<y_size)
+						for(x=x_position;x<x_size;x++)
+							screen[x+(y_position*x_size)]=' ';
+					x_position=x_size;
+					break;
+
+				/* Oh what fun, figuring out colors */
+				case 'm':
+					n=parse_numbers(escape_code,0);
+					for(n2=1;n2<n+1;n2++) {
+						c=parse_numbers(escape_code,n2);
+						switch(c) {
+
+						/* Normal */
+						case 0:
+							color=DEFAULT;
+							break;
+
+						/* BOLD */
+						case 1:
+							color|=INTENSE;
+							break;
+
+						/* Underline */
+						case 4:
+							fprintf(stderr,"Warning!  Underline not supported!\n\n");
+							break;
+
+						/* Blink */
+						case 5:
+							color|=BLINK;
+							use_blink++;
+							break;
+
+						/* Reverse */
+						case 7:
+							color=(color>>4)+(color<<4);
+							break;
+
+						/* Invisible */
+						case 8:
+							invisible=1;
+							fprintf(stderr,"Warning! Invisible!\n\n");
+							break;
+
+						/* Black Foreground */
+						case 30:
+							color&=FORE_CLEAR;
+							break;
+
+						/* Red Foreground */
+						case 31:
+							color&=FORE_CLEAR;
+							color|=FORE_RED;
+							break;
+
+						/* Green Foreground */
+						case 32:
+							color&=FORE_CLEAR;
+							color|=FORE_GREEN;
+							break;
+
+						/* Yellow Foreground */
+						case 33:
+							color&=FORE_CLEAR;
+							color|=FORE_RED;
+							color|=FORE_GREEN;
+							break;
+
+						/* Blue Foreground */
+						case 34:
+							color&=FORE_CLEAR;
+							color|=FORE_BLUE;
+							break;
 			   case 35: color&=FORE_CLEAR; /* Purple Fore */
 			            color|=FORE_BLUE;
 			            color|=FORE_RED;
@@ -561,146 +626,163 @@ static void gif_the_text(int animate,int blink,
 			           color|=BACK_GREEN;
 			           color|=BACK_BLUE;  break;
 
-				/* 24-bit color support */
-				case 38:
-				case 48:
-					fprintf(stderr,"Warning!  Unsupported 256 or 24-bit color mode!\n");
+						/* 24-bit color support */
+						case 38:
+						case 48:
+							fprintf(stderr,"Warning!  Unsupported 256 or 24-bit color mode!\n");
+							break;
+						default:
+							fprintf(stderr,"Warning! Invalid Color %d!\n\n",c);
+						}
+					}
 					break;
-			   default: fprintf(stderr,"Warning! Invalid Color %d!\n\n",c);
-			  }
-		       }
-	               break;
-		/* Set screen mode */
-	     case 'h': fprintf(stderr,"Warning!  Screen Mode Setting not Supported.\n\n"); 
-	               break;
-	        /* note, look for [= code */
- 	     case 'p': fprintf(stderr,"Warning! Keyboard Reassign not Supported.\n"); 
-	               break;
-	     default: fprintf(stderr,"Warning! Unknown Escape Code\n");
-	              break;
-	     }
-	  }
-       }
-          /* If it isn't an escape code, we do this */
-       else {
-          if (temp_char=='\n') { /* Line Feed */
-	     x_position=1;
-	     y_position++;
-	  }
-	  else if (temp_char=='\t') { /* Tab */
-	     x_position+=4;
-	  }
-          else if (temp_char=='\r'); /* Skip carriage returns, as most */
-				     /* ansi's are from DOS            */
-          else {
-	        /* Where is the best place to check for wrapping? */
-	     if (x_position>x_size) {
-	        x_position=x_position%x_size;
-		y_position++;
-	     }
 
-	     if (animate && y_position<=y_size) {  /* Animate it if we have the right */
-	        for(xx=0;xx<8;xx++) {
-	           for(yy=0;yy<16;yy++) {
-		      if ( ((unsigned char)
-	                 (font_to_use->font_data[(temp_char*16)+yy])) &(128>>xx) )
-		         gdImageSetPixel(im2,xx,yy,colorC[color&0x0f]);
-                         else gdImageSetPixel(im2,xx,yy,colorC[(color&0xf0)>>4]);
-		   }
+				/* Set screen mode */
+				case 'h':
+					fprintf(stderr,"Warning!  Screen Mode Setting not Supported.\n\n"); 
+					break;
+
+				/* note, look for [= code */
+ 				case 'p':
+					fprintf(stderr,"Warning! Keyboard Reassign not Supported.\n");
+					break;
+
+				default:
+					fprintf(stderr,"Warning! Unknown Escape Code\n");
+					break;
+				}
+			}
 		}
-	        animate_f=fopen(temp_file_name,"wb");
-	        gdImageGif(im2, animate_f);
-	        fclose(animate_f);
-	        animate_gif(out_f,temp_file_name,0,(x_position-1)*8,
-			    (y_position-1)*16,time_delay,0);
-	     }
-	     if (y_position<=y_size) {
-	        screen[(x_position-1)+((y_position-1)*x_size)]=temp_char;
-                if (!invisible) attributes[(x_position-1)+((y_position-1)*x_size)]=color;
-                x_position++;
-	     }
-	  }
-             /* See if the screen has wrapped */
-          if (x_position>x_size) {
-	     x_position=x_position%x_size;
-	     y_position++;
-	  }
-	    if (y_position>y_size) {
-	       emergency_exit=1;
-	       fprintf(stderr,"Error!  Scrolled past maximum y_size of %i!\n\n",y_size);
-	    }
-       }
-    }
-    if (!(animate||blink)) {  /* If not animating, draw the final picture */
+		/* If it isn't an escape code, we do this */
+		else {
+			/* Line Feed */
+			if (temp_char=='\n') {
+				x_position=1;
+				y_position++;
+			}
+			/* Tab */
+			else if (temp_char=='\t') {
+				x_position+=4;
+			}
+			/* Skip carriage returns, as most */
+			/* ANSIs are from DOS            */
+			else if (temp_char=='\r');
+			else {
+				/* Where is the best place to check for wrapping? */
+				if (x_position>x_size) {
+					x_position=x_position%x_size;
+					y_position++;
+				}
 
-       if (output_type==OUTPUT_EPS) {
-	  display_eps(out_f,output_type,x_size,y_size);
-       }
-       else {
-	  display_gd(out_f,output_type,x_size,y_size);
-       }
-    }
+				if (animate && y_position<=y_size) {  /* Animate it if we have the right */
+					for(xx=0;xx<8;xx++) {
+						for(yy=0;yy<16;yy++) {
+							if ( ((unsigned char) (font_to_use->font_data[(temp_char*16)+yy])) &(128>>xx) )
+								gdImageSetPixel(im2,xx,yy,colorC[color&0x0f]);
+							else
+								gdImageSetPixel(im2,xx,yy,colorC[(color&0xf0)>>4]);
+						}
+					}
+					animate_f=fopen(temp_file_name,"wb");
+					gdImageGif(im2, animate_f);
+					fclose(animate_f);
+					animate_gif(out_f,temp_file_name,0,(x_position-1)*8,
+							(y_position-1)*16,time_delay,0);
+				}
+				if (y_position<=y_size) {
+					screen[(x_position-1)+((y_position-1)*x_size)]=temp_char;
+					if (!invisible) attributes[(x_position-1)+((y_position-1)*x_size)]=color;
+					x_position++;
+				}
+			}
 
-
-    if ((!animate) && (blink)) {  /* If blinking... */
-
-       for(i=0;i<2;i++) {
-          for(y=0;y<y_size;y++) {
-             for(x=0;x<x_size;x++) {
-                for(xx=0;xx<8;xx++) {
-                   for(yy=0;yy<16;yy++) {
-	              if ( ((unsigned char) (font_to_use->font_data[(screen[x+(y*x_size)]*16)+yy])) &
-	                   (128>>xx) ) {
-	                 if ((attributes[x+(y*x_size)]&0x80)) {
-		            if (i) {
-                               gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,ega_color[attributes[x+(y*x_size)]&0x0f]);
-		            }
-		            else {
-			       gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,ega_color[(attributes[x+(y*x_size)]&0x70)>>4]);
-			    }
-
-			 }
-	                 else {
-			    gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,ega_color[attributes[x+(y*x_size)]&0x0f]);
-			 }
-		      }
-		      else {
-			 gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,ega_color[(attributes[x+(y*x_size)]&0x70)>>4]);
-		      }
-		   }
+			/* See if the screen has wrapped */
+			if (x_position>x_size) {
+				x_position=x_position%x_size;
+				y_position++;
+			}
+			if (y_position>y_size) {
+				emergency_exit=1;
+				fprintf(stderr,"Error!  Scrolled past maximum y_size of %i!\n\n",y_size);
+			}
 		}
-	     }
-	  }
+	}
 
-          sprintf(temp_file_name,"/tmp/ansi2gif_%i.gif",getpid());
-          animate_f=fopen(temp_file_name,"wb");
-          gdImageGif(im, animate_f);
-          fclose(animate_f);
-          animate_gif(out_f,temp_file_name,(1-i),0,0,time_delay,1);
-       }
-       fputc(';',out_f);
-    }
-   
-    if (animate) {
-       fputc(';', out_f); /* End of Gif file */
-    }
-   if ((backtrack) && !(animate)) {
-      fprintf(stderr,"Warning!  The cursor moved backwards and animated output was not selected.\n"
-	     "          For proper output, you might want to try again with --animate\n\n"); 
-   }
-   if ((use_blink)&&(!blink)) {
-      fprintf(stderr,"Warning!  A blinking color code was used.  To display blinking ansis you\n"
-	     "          to run with the --blink option to create an animated gif.\n\n");
-   }
-   if (output_type==OUTPUT_EPS) {
-      finish_eps(out_f);
-   }
-   else {
-      finish_gd(out_f);
-   }
-	
-   unlink(temp_file_name);   
- 
+	/* If not animating, draw the final picture */
+	if (!(animate||blink)) {
+
+		if (output_type==OUTPUT_EPS) {
+			display_eps(out_f,output_type,x_size,y_size);
+		}
+		else {
+			display_gd(out_f,output_type,x_size,y_size);
+		}
+	}
+
+
+	/* If blinking... */
+
+	/* something needs to be done about this nesting */
+	if ((!animate) && (blink)) {
+
+		for(i=0;i<2;i++) {
+			for(y=0;y<y_size;y++) {
+				for(x=0;x<x_size;x++) {
+					for(xx=0;xx<8;xx++) {
+						for(yy=0;yy<16;yy++) {
+							if ( ((unsigned char) (font_to_use->font_data[(screen[x+(y*x_size)]*16)+yy])) & (128>>xx) ) {
+								if ((attributes[x+(y*x_size)]&0x80)) {
+									if (i) {
+										gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,ega_color[attributes[x+(y*x_size)]&0x0f]);
+									}
+									else {
+										gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,ega_color[(attributes[x+(y*x_size)]&0x70)>>4]);
+									}
+								}
+								else {
+									gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,ega_color[attributes[x+(y*x_size)]&0x0f]);
+								}
+							}
+							else {
+								gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,ega_color[(attributes[x+(y*x_size)]&0x70)>>4]);
+							}
+						}
+					}
+				}
+			}
+
+			sprintf(temp_file_name,"/tmp/ansi2gif_%i.gif",getpid());
+			animate_f=fopen(temp_file_name,"wb");
+			gdImageGif(im, animate_f);
+			fclose(animate_f);
+			animate_gif(out_f,temp_file_name,(1-i),0,0,time_delay,1);
+		}
+		fputc(';',out_f);
+	}
+
+	if (animate) {
+		fputc(';', out_f); /* End of Gif file */
+	}
+
+	if ((backtrack) && !(animate)) {
+		fprintf(stderr,"Warning!  The cursor moved backwards and animated output was not selected.\n"
+			       "          For proper output, you might want to try again with --animate\n\n"); 
+	}
+
+	if ((use_blink)&&(!blink)) {
+		fprintf(stderr,"Warning!  A blinking color code was used.  To display blinking ansis you\n"
+			       "          to run with the --blink option to create an animated gif.\n\n");
+	}
+
+	if (output_type==OUTPUT_EPS) {
+		finish_eps(out_f);
+	}
+	else {
+		finish_gd(out_f);
+	}
+
+	unlink(temp_file_name);
+
 }
 
 
@@ -708,232 +790,248 @@ static int detect_max_y(int animate,int blink,
 			FILE *in_f,FILE *out_f,
 		        int time_delay,int x_size,int y_size,
 			int output_type) {
-   
-    unsigned char temp_char;
 
-    unsigned char escape_code[BUFSIZ];
-      
-    int x_position,y_position,oldx_position,oldy_position;
+	unsigned char temp_char;
+	unsigned char escape_code[BUFSIZ];
+	int x_position,y_position,oldx_position,oldy_position;
+	int escape_counter,n,n2;
+	int backtrack=0;
+	int max_y=y_size;
 
-    int escape_counter,n,n2;
+	/* Initialize the Variables */
+	x_position=1; y_position=1;
+	oldx_position=1; oldy_position=1;
 
-    int backtrack=0;
-   
-    int max_y=y_size;
+	while (  ((fread(&temp_char,sizeof(temp_char),1,in_f))>0) ) {
 
-   
-       /* Initialize the Variables */
-    x_position=1; y_position=1;
-    oldx_position=1; oldy_position=1;
-    
-    while (  ((fread(&temp_char,sizeof(temp_char),1,in_f))>0) ) {
+		/* Did somebody say escape?? */
+		if (temp_char==27) {
+			fread(&temp_char,sizeof(temp_char),1,in_f);
+			/* If after escape we have '[' we have an escape code */
+			if (temp_char!='[') fprintf(stderr,"False Escape\n");
+			else {
+				escape_counter=0;
+				/* Read in the command */
+				while (!isalpha(temp_char)) {
+					fread(&temp_char,sizeof(temp_char),1,in_f);
+					escape_code[escape_counter]=temp_char;
+					escape_counter++;
+				}
+				escape_code[escape_counter]='\000';
+				/* Big 'ol switch statement to figure out what to do */
+				switch(escape_code[escape_counter-1]) {
 
-          /* Did somebody say escape?? */
-       if (temp_char==27) {
-	  fread(&temp_char,sizeof(temp_char),1,in_f);
-	     /* If after escape we have '[' we have an escape code */
-	  if (temp_char!='[') fprintf(stderr,"False Escape\n");
-	  else {
-	     escape_counter=0;
-	     while (!isalpha(temp_char)) { /* Read in the command */
-	        fread(&temp_char,sizeof(temp_char),1,in_f);
-	        escape_code[escape_counter]=temp_char;
-	        escape_counter++;
-	     }
-	     escape_code[escape_counter]='\000';
-	        /* Big 'ol switch statement to figure out what to do */
-	     switch(escape_code[escape_counter-1]) {
-	        /* Move to x,y */
-	     case 'H': 
-	     case 'f': n=parse_numbers(escape_code,1);
-	               n2=parse_numbers(escape_code,2);
-	               if ( (y_position>n) || 
-			   ((x_position>n2)&&(y_position>=n))) backtrack++;
-		       y_position=n;
-	               x_position=n2;		       
-	               break; 
-		/* Decrement Y by N */
-	     case 'A': n=parse_numbers(escape_code,1);
-		       backtrack++;
-	               y_position-=n;
-	               break;
-		/* Increment Y by N */
-	     case 'B': n=parse_numbers(escape_code,1);
-	               y_position+=n;
-	               break;
-	        /* Increment X by N */
-	     case 'C': n=parse_numbers(escape_code,1); 
-	               x_position+=n;
-	               break;
-		/* Decrement X by N */
-	     case 'D': n=parse_numbers(escape_code,1); 
-		       if (n!=255) {
-	                  backtrack++;
-		          x_position-=n;
-		          if (x_position<0) x_position=0;
-		       }
-		
-	               break;
-		/* Report Current Position */
-	     case 'R': fprintf(stderr,"Current Position: %d, %d\n",
-			      x_position,y_position); break;
-		/* Save Position */
-	     case 's': oldx_position=x_position;
-	               oldy_position=y_position;
-	               break;
-		/* Restore Position */
-	     case 'u': x_position=oldx_position;
-	               y_position=oldy_position;
-	               break;
-		/* Clear Screen and Home */
-	     case 'J': 		
-	               x_position=1;
-	               y_position=1;
-	               break;
-		/* Clear to end of line */
-	     case 'K': 		
-	               x_position=x_size; 
-	               break;
-	     default: /* normal, we ignore some cases */
-	              break;
-	     }
-	  }
-       }
-          /* If it isn't an escape code, we do this */
-       else {  
-          if (temp_char=='\n') { /* Line Feed */ 
-	     x_position=1;
-	     y_position++;
-	  }
-	  else if (temp_char=='\t') { /* Tab */
-	     x_position+=4;  
-	  }
-          else if (temp_char=='\r'); /* Skip carriage returns, as most */
-				     /* ansi's are from DOS            */
-          else {
-	     
-	        /* Where is the best place to check for wrapping? */
-	     if (x_position>x_size) {
-	        x_position=x_position%x_size;
-		y_position++;
-	     }
+				/* Move to x,y */
+				case 'H':
+				case 'f':
+					n=parse_numbers(escape_code,1);
+					n2=parse_numbers(escape_code,2);
+					if ( (y_position>n) ||
+						((x_position>n2)&&(y_position>=n))) backtrack++;
+					y_position=n;
+					x_position=n2;
+					break;
 
-//	     if (y_position<=y_size) {
-                x_position++;
-//	     }	     	     
+				/* Decrement Y by N */
+				case 'A':
+					n=parse_numbers(escape_code,1);
+					backtrack++;
+					y_position-=n;
+					break;
 
-	  }
-             /* See if the screen has wrapped */
-          if (x_position>x_size) {
-	     x_position=x_position%x_size;
-	     y_position++;
-	  }
-	  if (y_position>max_y) {
-	     max_y=y_position;
-	  }
-       }
-    }
-   
-   fprintf(stderr,"Found maximum y of %d\n",y_position);
+				/* Increment Y by N */
+				case 'B':
+					n=parse_numbers(escape_code,1);
+					y_position+=n;
+					break;
 
-   return max_y;
+				/* Increment X by N */
+				case 'C':
+					n=parse_numbers(escape_code,1);
+					x_position+=n;
+					break;
+
+				/* Decrement X by N */
+				case 'D':
+					n=parse_numbers(escape_code,1);
+					if (n!=255) {
+						backtrack++;
+						x_position-=n;
+						if (x_position<0) x_position=0;
+					}
+					break;
+
+				/* Report Current Position */
+				case 'R':
+					fprintf(stderr,"Current Position: %d, %d\n",
+						x_position,y_position);
+					break;
+
+				/* Save Position */
+				case 's':
+					oldx_position=x_position;
+					oldy_position=y_position;
+					break;
+
+				/* Restore Position */
+				case 'u':
+					x_position=oldx_position;
+					y_position=oldy_position;
+					break;
+
+				/* Clear Screen and Home */
+				case 'J':
+					x_position=1;
+					y_position=1;
+					break;
+
+				/* Clear to end of line */
+				case 'K':
+					x_position=x_size;
+					break;
+
+				/* normal, we ignore some cases */
+				default:
+					break;
+				}
+			}
+		}
+		/* If it isn't an escape code, we do this */
+		else {
+			if (temp_char=='\n') { /* Line Feed */
+				x_position=1;
+				y_position++;
+			}
+			else if (temp_char=='\t') { /* Tab */
+				x_position+=4;
+			}
+			else if (temp_char=='\r');	/* Skip carriage returns, as most */
+							/* ansi's are from DOS            */
+			else {
+				/* Where is the best place to check for wrapping? */
+				if (x_position>x_size) {
+					x_position=x_position%x_size;
+					y_position++;
+				}
+
+				// if (y_position<=y_size) {
+				x_position++;
+				// }
+			}
+
+			/* See if the screen has wrapped */
+			if (x_position>x_size) {
+				x_position=x_position%x_size;
+				y_position++;
+			}
+			if (y_position>max_y) {
+				max_y=y_position;
+			}
+		}
+	}
+
+	fprintf(stderr,"Found maximum y of %d\n",y_position);
+
+	return max_y;
 }
 
 
 static void display_help(char *name_run_as, int just_version) {
 
-    int i;
-   
-    printf("\nansi2gif v %s by Vince Weaver <vince _at_ deater.net>\n\n",
-	   VERSION);
-    if (!just_version) {
-       printf(" %s [--animate] [--blink] [--eps] [--font fontfile]\n",
-	      name_run_as); 
-       for(i=0;i<strlen(name_run_as);i++) putchar(' ');
-       printf("  [--gif] [--help] [--png] [--version] [--timedelay T]\n");
-       for(i=0;i<strlen(name_run_as);i++) putchar(' ');
-       printf("  [--xsize X] [--ysize Y] input_file output_file\n\n");
-       printf("   --animate          : Create an animated gif if an animated ansi\n");
-       printf("   --blink            : Create an animated gif enabling blinking\n");
-       printf("   --eps              : Output an Encapsulated Postscript\n");
-//       printf("   --color X=0xRRGGBB : Set color \"X\" [0-16] to hex value RRGGBB [a number]\n");
-       printf("   --font fontfile    : Use vgafont \"filename\" to create gif\n"); 
-       printf("   --gif              : output a GIF file\n");
-       printf("   --help             : show this help\n");
-       printf("   --png              : output a PNG file\n");
-       printf("   --timedelay T      : Delay T 100ths of seconds between each displayed\n"
-	      "                        character in animate mode.\n");
-       printf("   --version          : Print version information\n");
-       printf("   --xsize X          : Make the output X characters wide\n");
-       printf("   --ysize Y          : Make the output Y characters long.\n"
-	      "                        use \"auto\" to figure out on the fly.\n");
-       printf("\n");
-       printf("Instead of the long option, a single dash and the first letter of the\n"
-	      "option may be substituted.  That is, \"-a\" instead of \"--animate\"\n\n");
-    }
-    exit(0);
+	int i;
+
+	printf("\nansi2gif v %s by Vince Weaver <vince _at_ deater.net>\n\n",
+		VERSION);
+
+	if (!just_version) {
+		printf(" %s [--animate] [--blink] [--eps] [--font fontfile]\n",
+			name_run_as);
+		for(i=0;i<strlen(name_run_as);i++) putchar(' ');
+		printf("  [--gif] [--help] [--png] [--version] [--timedelay T]\n");
+		for(i=0;i<strlen(name_run_as);i++) putchar(' ');
+		printf("  [--xsize X] [--ysize Y] input_file output_file\n\n");
+		printf("   --animate          : Create an animated gif if an animated ansi\n");
+		printf("   --blink            : Create an animated gif enabling blinking\n");
+		printf("   --eps              : Output an Encapsulated Postscript\n");
+		// printf("   --color X=0xRRGGBB : Set color \"X\" [0-16] to hex value RRGGBB [a number]\n");
+		printf("   --font fontfile    : Use vgafont \"filename\" to create gif\n"); 
+		printf("   --gif              : output a GIF file\n");
+		printf("   --help             : show this help\n");
+		printf("   --png              : output a PNG file\n");
+		printf("   --timedelay T      : Delay T 100ths of seconds between each displayed\n"
+		       "                        character in animate mode.\n");
+		printf("   --version          : Print version information\n");
+		printf("   --xsize X          : Make the output X characters wide\n");
+		printf("   --ysize Y          : Make the output Y characters long.\n"
+		       "                        use \"auto\" to figure out on the fly.\n");
+		printf("\n");
+		printf("Instead of the long option, a single dash and the first letter of the\n"
+		       "option may be substituted.  That is, \"-a\" instead of \"--animate\"\n\n");
+	}
+	exit(0);
 }
 
-    /* Load VGA font... Used in my game TB1 */
-    /* psf font support added by <bkbratko _at_ ardu.raaf.defence.gov.au> */
-vga_font *load_vga_font(char *namest,int xsize,int ysize,int numchars) {
-   
-    unsigned char buff[16];
-    FILE *f;
-    int i,fonty,numloop;
-    vga_font *font;
-   
-    unsigned char *data;
-   
-    short int psf_id;
-    char psf_mode;
-    char psf_height;
-   
-    font=(vga_font *)malloc(sizeof(vga_font));
-    data=calloc(numchars*ysize,(sizeof(unsigned char)));
-   
-    f=fopen(namest,"r");
-    if (f==NULL) {
-       fprintf(stderr,"\nERROR loading font file %s.\n\n",namest);
-       return NULL;
-    }
-   
-    fread(&psf_id,sizeof(psf_id),1,f);
-    /* psf files contain a magic number 0x0436 in the first word */
-    if ( 0==strncmp(".psf",namest+strlen(namest)-4,4) ) {
-       if (psf_id!=0x436 ) {
-	  fprintf(stderr,"ERROR file %s is not a psf file \n",namest);
-	  return NULL;
-       }
-    }
-    /* the next two bytes of psf file contain the mode and height
-     * mode 0 is for 256 character fonts, which can be used by fontprint
-     * only height = 16 is suitable for fontprint v3.0.x */
-    fread(&psf_mode,sizeof(psf_mode),1,f);
-    fread(&psf_height,sizeof(psf_height),1,f);
-    if (psf_id==0x436 && (psf_mode!=0 || psf_height!=16 )) {
-       fprintf(stderr,"ERROR unable to deal with this size of psf file \n");
-       return NULL;
-    }
-   
-    /* if control reaches this point and the font is not a psf file
-     * then we must rewind the file in order to recover the first
-     * four bytes */
-    if (psf_id!=0x436) rewind(f);
-   
-    numloop=(numchars*ysize);
-    font->width=xsize;
-    font->height=ysize;
-    font->numchars=numchars;
-    font->font_data=data;
-    fonty=0;
-    while ( (!feof(f))&&(fonty<numloop)) {
-	  fread(buff,1,16,f);
-	  for(i=0;i<16;i++) font->font_data[fonty+i]=buff[i];
-	  fonty+=16;
-    }
-    fclose(f);
-    return font;
+	/* Load VGA font... Used in my game TB1 */
+	/* psf font support added by <bkbratko _at_ ardu.raaf.defence.gov.au> */
+static vga_font *load_vga_font(char *namest,int xsize,int ysize,int numchars) {
+
+	unsigned char buff[16];
+	FILE *f;
+	int i,fonty,numloop;
+	vga_font *font;
+
+	unsigned char *data;
+
+	short int psf_id;
+	char psf_mode;
+	char psf_height;
+
+	font=(vga_font *)malloc(sizeof(vga_font));
+	data=calloc(numchars*ysize,(sizeof(unsigned char)));
+
+	f=fopen(namest,"r");
+	if (f==NULL) {
+		fprintf(stderr,"\nERROR loading font file %s.\n\n",namest);
+		return NULL;
+	}
+
+	fread(&psf_id,sizeof(psf_id),1,f);
+	/* psf files contain a magic number 0x0436 in the first word */
+	if ( 0==strncmp(".psf",namest+strlen(namest)-4,4) ) {
+		if (psf_id!=0x436 ) {
+			fprintf(stderr,"ERROR file %s is not a psf file \n",namest);
+			return NULL;
+		}
+	}
+
+	/* the next two bytes of psf file contain the mode and height
+	 * mode 0 is for 256 character fonts, which can be used by fontprint
+	 * only height = 16 is suitable for fontprint v3.0.x */
+	fread(&psf_mode,sizeof(psf_mode),1,f);
+	fread(&psf_height,sizeof(psf_height),1,f);
+	if (psf_id==0x436 && (psf_mode!=0 || psf_height!=16 )) {
+		fprintf(stderr,"ERROR unable to deal with this size of psf file \n");
+		return NULL;
+	}
+
+	/* if control reaches this point and the font is not a psf file
+	 * then we must rewind the file in order to recover the first
+	 * four bytes */
+	if (psf_id!=0x436) rewind(f);
+
+	numloop=(numchars*ysize);
+	font->width=xsize;
+	font->height=ysize;
+	font->numchars=numchars;
+	font->font_data=data;
+	fonty=0;
+	while ( (!feof(f))&&(fonty<numloop)) {
+		fread(buff,1,16,f);
+		for(i=0;i<16;i++) font->font_data[fonty+i]=buff[i];
+		fonty+=16;
+	}
+	fclose(f);
+	return font;
 }
 
 	/****************/
