@@ -101,7 +101,7 @@ static int colorC[16];
 static gdImagePtr im,im2,im3;
 static vga_font *font_to_use=NULL;
 static unsigned char *screen;
-static unsigned char *attributes;
+static unsigned int *attributes;
 
 static void setup_gd(FILE *out_f,int x_size,int y_size) {
 
@@ -351,8 +351,8 @@ static void gif_the_text(int animate,int blink,
 
 	int backtrack=0,use_blink=0;
 
-	screen=(unsigned char *)calloc(x_size*y_size,sizeof(unsigned char));
-	attributes=(unsigned char *)calloc(x_size*y_size,sizeof(unsigned char));
+	screen=calloc(x_size*y_size,sizeof(unsigned char));
+	attributes=calloc(x_size*y_size,sizeof(unsigned int));
 
 	if (output_type==OUTPUT_EPS) {
 		setup_eps(out_f,x_size,y_size);
