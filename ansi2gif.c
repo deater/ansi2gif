@@ -657,7 +657,10 @@ static void parse_color(char *escape_code, int output_type) {
 				}
 
 				if (c>255) {
-					fprintf(stderr,"Warning!  Color %d out of range!\n",c);
+					if (!already_print_color_warning) {
+						fprintf(stderr,"Warning!  Color %d out of range!\n",c);
+						already_print_color_warning=1;
+					}
 					break;
 				}
 
@@ -707,7 +710,10 @@ static void parse_color(char *escape_code, int output_type) {
 				}
 
 				if (c>255) {
-					fprintf(stderr,"Warning!  Color %d out of range!\n",c);
+					if (!already_print_color_warning) {
+						fprintf(stderr,"Warning!  Color %d out of range!\n",c);
+						already_print_color_warning=1;
+					}
 					break;
 				}
 
