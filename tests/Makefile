@@ -20,7 +20,8 @@ all:	\
 	map12.gif \
 	map12.png \
 	24bit.gif \
-	24bit.png
+	24bit.png \
+	24bit.eps
 
 
 map12.png:	map12.ans
@@ -45,6 +46,9 @@ map12.gif:	map12.ans
 
 24bit.gif:	24bit.ans
 	../ansi2gif 24bit.ans 24bit.gif
+
+24bit.eps:	24bit.ans
+	../ansi2gif 24bit.ans 24bit.eps
 
 
 256color.png:	256color.ans
