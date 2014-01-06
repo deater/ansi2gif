@@ -25,7 +25,7 @@
 #define XFONTSIZE 7.1
 #define YFONTSIZE 13
 
-#define VERSION "0.9.15"
+#define VERSION "0.10.0"
 
 #define OUTPUT_PNG 0
 #define OUTPUT_GIF 1

@@ -1,10 +1,10 @@
 Begin3
 Title:        ansi2png
-Version:      0.9.14
-Entered-date: 19JAN2012   
+Version:      0.10.0
+Entered-date: 6JAN2013   
 Description:  Create a gif, eps or png file from BBS "Ansi" files.
               Animations and blinking output is supported.
-Keywords:     ansi png gif png bbs vga font        
+Keywords:     ansi png gif eps png bbs vga font        
 Author:       vince@deater.net (Vincent Weaver)         
 Maintained-by:vince@deater.net (Vincent Weaver)  
 Primary-site: http://www.deater.net/weave/vmwprod/ansi2gif/
