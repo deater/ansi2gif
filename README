@@ -1,9 +1,9 @@
-*****************  ansi2gif version 0.9.14  ***************
+*****************  ansi2gif version 0.10.0  ***************
 *****************                           ***************
                       by Vince Weaver
                          vince _at_ deater.net
 			    http://www.deater.net/weave/
-			    
+			       github.com/deater/ansi2gif.git
 			 
 Requirements:  Designed for Linux, but any platform with gcc will probably 
                work.
@@ -66,10 +66,10 @@ INSTALLING
     Now install ansi2gif
     
     Uncompress the file 
-       tar -xzvf ansi2gif-0.9.14.tar.gz
+       tar -xzvf ansi2gif-0.10.0.tar.gz
        
     Enter the created directory
-       cd ansi2gif-0.9.14
+       cd ansi2gif-0.10.0
        
     The Makefile should be OK.  If you have "gd" installed in a 
     non-standard directory, you might have to edit the makefile to
@@ -138,5 +138,5 @@ THANKS
 
 
 -------
-Vince Weaver (17 August 2007)
+Vince Weaver (6 January 2014)
 vince _at_ deater.net
