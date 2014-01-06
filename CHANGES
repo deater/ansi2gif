@@ -81,5 +81,6 @@ RELEASE 0.9.14
 6 January 2014
 + Re-write a lot of the color handling code.
   This was due to a request from Chad Doebelin for 256-color support.
++ Support 24-bit color ANS (although approximated on png/gif)
 
 RELEASE 0.10.0

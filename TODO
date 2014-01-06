@@ -3,7 +3,7 @@
 + automatic sizing of output gif based on ansi
 + handle background color and line-feed properly (background should
 	continue to edge I think)
-+ 24-bit ANSI colors
++ full 24-bit ANSI colors for gif/png
 
 Far-Out-There
 + Scrolling animated gif.  I.e. simulate the console when y>y_size
