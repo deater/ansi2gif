@@ -438,7 +438,7 @@ static int intense=0,fore_color_blink=0;
 
 static void parse_color(char *escape_code, int output_type) {
 
-	int c,temp_color;
+	int c,temp_color,r,g,b;
 	static int already_print_color_warning=0;
 	char *pointer;
 
@@ -610,11 +610,31 @@ static void parse_color(char *escape_code, int output_type) {
 			pointer=strtok(NULL,";m");
 			if (pointer==NULL) break;
 			c=atoi(pointer);
+
+			/* 24-bit color */
 			if (c==2) {
-				if (!already_print_color_warning) {
-					fprintf(stderr,"Warning!  Unsupported 24-bit color mode!\n");
-					already_print_color_warning=1;
+				/* FIXME: loop until get NULL? */
+				pointer=strtok(NULL,";m");
+				if (pointer==NULL) break;
+				r=atoi(pointer);
+
+				pointer=strtok(NULL,";m");
+				if (pointer==NULL) break;
+				g=atoi(pointer);
+
+				pointer=strtok(NULL,";m");
+				if (pointer==NULL) break;
+				b=atoi(pointer);
+
+				if (!allocated_256colors) {
+					setup_256colors(output_type);
 				}
+
+				/* Not exact, matches to the 6x6x6 color */
+				/* TODO: proper 24-bit color support     */
+				fore_color=gdImageColorResolve(im,
+							r,g,b);
+
 				break;
 			}
 			else if (c==5) {
@@ -646,10 +666,28 @@ static void parse_color(char *escape_code, int output_type) {
 			if (pointer==NULL) break;
 			c=atoi(pointer);
 			if (c==2) {
-				if (!already_print_color_warning) {
-					fprintf(stderr,"Warning!  Unsupported 24-bit color mode!\n");
-					already_print_color_warning=1;
+				/* FIXME: loop until get NULL? */
+				pointer=strtok(NULL,";m");
+				if (pointer==NULL) break;
+				r=atoi(pointer);
+
+				pointer=strtok(NULL,";m");
+				if (pointer==NULL) break;
+				g=atoi(pointer);
+
+				pointer=strtok(NULL,";m");
+				if (pointer==NULL) break;
+				b=atoi(pointer);
+
+				if (!allocated_256colors) {
+					setup_256colors(output_type);
 				}
+
+				/* Not exact, matches to the 6x6x6 color */
+				/* TODO: proper 24-bit color support     */
+				back_color=gdImageColorResolve(im,
+							r,g,b);
+
 				break;
 			}
 			else if (c==5) {

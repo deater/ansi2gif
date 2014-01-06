@@ -4,7 +4,7 @@ int main(int argc, char **argv) {
 
 	int x;
 
-	printf("\x1b[0;37mTesting 24-bit color mode:\n");
+	printf("\x1b[0;37mTesting 24-bit color mode:");
 
 	for(x=0;x<256;x++) {
 		if ((x%64==0)) printf("\n");
