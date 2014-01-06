@@ -74,3 +74,12 @@ RELEASE 0.9.13
 + Implement --ysize auto at the request of mrmocha
 
 RELEASE 0.9.14
+
+5 January 2014
++ Auto-detect format based on extension
+
+6 January 2014
++ Re-write a lot of the color handling code.
+  This was due to a request from Chad Doebelin for 256-color support.
+
+RELEASE 0.10.0
