@@ -21,6 +21,7 @@
 #define DEFAULT_XSIZE    80
 #define DEFAULT_YSIZE    25
 
+/* For eps */
 #define XFONTSIZE 7.1
 #define YFONTSIZE 13
 
@@ -30,6 +31,11 @@
 #define OUTPUT_GIF 1
 #define OUTPUT_EPS 2
 #define OUTPUT_MPG 3
+
+/* Attributes */
+#define BLINK		1
+#define BOLD		2
+#define UNDERLINE	4
 
 typedef struct {
 	unsigned char *font_data;
@@ -44,7 +50,7 @@ void animate_gif(FILE *fout,char *fname,int firstImage,int Xoff,int Yoff,
 
 
 	/* If index=0, return the number of numbers */
-static int parse_numbers(unsigned char *string,int index) {
+static int parse_numbers(char *string,int index) {
 
 	int digit[3];  /* Assuming no 4 digit movements */
 	int i=0,x=0,n=0,nums=0;
@@ -76,9 +82,8 @@ static int parse_numbers(unsigned char *string,int index) {
 	return 0;
 }
 
-#define BLINK     1
 
-static int ega_color[16];
+static int ega_color[256];
 static int colorC[16];
 
 static gdImagePtr im,im2,im3;
@@ -105,10 +110,7 @@ static unsigned int *back_colors;
 #define EGA_YELLOW	14
 #define EGA_WHITE	15
 
-static void setup_gd(FILE *out_f,int x_size,int y_size) {
-
-	im = gdImageCreateTrueColor(x_size*8,y_size*16);  /* Full Screen */
-	im2 = gdImageCreateTrueColor(8,16);               /* One Character */
+static void setup_gd_16colors(void) {
 
 	/* Setup the Colors to Use for fullscreen */
 	ega_color[0] =gdImageColorAllocate(im,0x00,0x00,0x00);
@@ -127,6 +129,30 @@ static void setup_gd(FILE *out_f,int x_size,int y_size) {
 	ega_color[13]=gdImageColorAllocate(im,0xFF,0x00,0xff);
 	ega_color[14]=gdImageColorAllocate(im,0xFF,0xFF,0x00);
 	ega_color[15]=gdImageColorAllocate(im,0xFF,0xFF,0xFF);
+}
+
+static void setup_gd_256colors(void) {
+
+	int i;
+
+	/* 6x6x6 color cube */
+	for(i=0x10;i<0xe8;i++) {
+		ega_color[i] = gdImageColorAllocate(im,0x00,0x00,0x00);
+	}
+
+	/* 24 steps of greyscale */
+	for(i=0xe8;i<0x100;i++) {
+		ega_color[i] = gdImageColorAllocate(im,0x00,0x00,0x00);
+	}
+}
+
+static void setup_gd(FILE *out_f,int x_size,int y_size) {
+
+	im = gdImageCreateTrueColor(x_size*8,y_size*16);  /* Full Screen */
+	im2 = gdImageCreateTrueColor(8,16);               /* One Character */
+
+	setup_gd_16colors();
+	setup_gd_256colors();
 
 	/* Setup the Colors to Use for character.  Is this needed? */
 	colorC[0] =gdImageColorAllocate(im2,0x00,0x00,0x00);
@@ -337,14 +363,17 @@ static int use_blink=0,invisible=0;
 static int fore_color=0,back_color=0;
 static int intense=0,fore_color_blink=0;
 
-static void parse_color(unsigned char *escape_code) {
+static void parse_color(char *escape_code) {
 
-	int n,n2,c,temp_color;
+	int c,temp_color;
 	static int already_print_color_warning=0;
+	char *pointer;
 
-	n=parse_numbers(escape_code,0);
-	for(n2=1;n2<n+1;n2++) {
-		c=parse_numbers(escape_code,n2);
+	pointer=strtok(escape_code,";m");
+
+	do {
+		c=atoi(pointer);
+
 		switch(c) {
 
 		/* Normal */
@@ -513,7 +542,9 @@ static void parse_color(unsigned char *escape_code) {
 		default:
 			fprintf(stderr,"Warning! Invalid Color %d!\n\n",c);
 		}
-	}
+
+		pointer=strtok(NULL,";m");
+	} while(pointer);
 }
 
 
@@ -526,7 +557,7 @@ static void gif_the_text(int animate,int blink,
 	unsigned char temp_char;
 
 
-	unsigned char escape_code[BUFSIZ];
+	char escape_code[BUFSIZ];
 	char temp_file_name[BUFSIZ];
 
 	int x_position,y_position,oldx_position,oldy_position;
@@ -873,7 +904,7 @@ static int detect_max_y(int animate,int blink,
 			int output_type) {
 
 	unsigned char temp_char;
-	unsigned char escape_code[BUFSIZ];
+	char escape_code[BUFSIZ];
 	int x_position,y_position,oldx_position,oldy_position;
 	int escape_counter,n,n2;
 	int backtrack=0;
