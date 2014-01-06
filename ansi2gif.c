@@ -134,15 +134,20 @@ static void setup_gd_16colors(void) {
 static void setup_gd_256colors(void) {
 
 	int i;
+	double grey,r,g,b;
 
 	/* 6x6x6 color cube */
 	for(i=0x10;i<0xe8;i++) {
-		ega_color[i] = gdImageColorAllocate(im,0x00,0x00,0x00);
+		r=(256.0/6.0)*(double)((i-16)/36);
+		g=(256.0/6.0)*(double)((i-16)/6);
+		b=(256.0/6.0)*(double)((i-16)%6);
+		ega_color[i] = gdImageColorAllocate(im,(int)r,(int)g,(int)b);
 	}
 
 	/* 24 steps of greyscale */
-	for(i=0xe8;i<0x100;i++) {
-		ega_color[i] = gdImageColorAllocate(im,0x00,0x00,0x00);
+	for(i=0;i<24;i++) {
+		grey=(256.0/24.0)*(double)i;
+		ega_color[0xe8+i] = gdImageColorAllocate(im,grey,grey,grey);
 	}
 }
 
