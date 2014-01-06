@@ -376,7 +376,7 @@ static void parse_color(char *escape_code) {
 
 		switch(c) {
 
-		/* Normal */
+			/* Normal */
 		case 0:
 			fore_color=ega_color[EGA_GREY];
 			back_color=ega_color[EGA_BLACK];
@@ -384,7 +384,7 @@ static void parse_color(char *escape_code) {
 			intense=0;
 			break;
 
-			/* BOLD */
+			/* Intense */
 		case 1:
 			intense=1;
 			if (fore_color==ega_color[EGA_BLACK]) {
@@ -531,14 +531,56 @@ static void parse_color(char *escape_code) {
 			back_color=ega_color[EGA_GREY];
 			break;
 
-			/* 24-bit color support */
+			/* Extended color support -- foreground */
 		case 38:
-		case 48:
-			if (!already_print_color_warning) {
-				fprintf(stderr,"Warning!  Unsupported 256 or 24-bit color mode!\n");
-				already_print_color_warning=1;
+
+			pointer=strtok(NULL,";m");
+			if (pointer==NULL) break;
+			c=atoi(pointer);
+			if (c==2) {
+				if (!already_print_color_warning) {
+					fprintf(stderr,"Warning!  Unsupported 24-bit color mode!\n");
+					already_print_color_warning=1;
+				}
+				break;
+			}
+			else if (c==5) {
+				/* FIXME: loop until get NULL? */
+				pointer=strtok(NULL,";m");
+				if (pointer==NULL) break;
+				c=atoi(pointer);
+				fore_color=ega_color[c];
+			}
+			else {
+				fprintf(stderr,"Warning!  Unknown extended color format!\n");
 			}
 			break;
+
+			/* Extended color support -- background */
+		case 48:
+
+			pointer=strtok(NULL,";m");
+			if (pointer==NULL) break;
+			c=atoi(pointer);
+			if (c==2) {
+				if (!already_print_color_warning) {
+					fprintf(stderr,"Warning!  Unsupported 24-bit color mode!\n");
+					already_print_color_warning=1;
+				}
+				break;
+			}
+			else if (c==5) {
+				/* FIXME: loop until get NULL? */
+				pointer=strtok(NULL,";m");
+				if (pointer==NULL) break;
+				c=atoi(pointer);
+				back_color=ega_color[c];
+			}
+			else {
+				fprintf(stderr,"Warning!  Unknown extended color format!\n");
+			}
+			break;
+
 		default:
 			fprintf(stderr,"Warning! Invalid Color %d!\n\n",c);
 		}
