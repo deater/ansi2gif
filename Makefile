@@ -31,6 +31,7 @@ clean:
 	rm -f *.o
 	rm -f ansi2gif ansi2png ansi2eps
 	rm -f *~
+	cd tests && make clean
 	cd sample_fonts && make clean
 
 

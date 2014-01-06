@@ -16,7 +16,16 @@ all:	\
 	256color.png \
 	256color.eps \
 	256color_oflo.gif \
-	256color_oflo.png
+	256color_oflo.png \
+	map12.gif \
+	map12.png
+
+
+map12.png:	map12.ans
+	../ansi2gif map12.ans map12.png
+
+map12.gif:	map12.ans
+	../ansi2gif map12.ans map12.gif
 
 
 16color.png:	16color.ans
@@ -83,5 +92,6 @@ utopia24.gif:	utopia24.ans
 	../ansi2gif --animate utopia24.ans utopia24.gif
 
 clean:	
+	cd code && make clean
 	rm -f *~ *.gif *.png *.eps
 
