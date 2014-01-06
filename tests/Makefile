@@ -18,7 +18,9 @@ all:	\
 	256color_oflo.gif \
 	256color_oflo.png \
 	map12.gif \
-	map12.png
+	map12.png \
+	24bit.gif \
+	24bit.png
 
 
 map12.png:	map12.ans
@@ -36,6 +38,13 @@ map12.gif:	map12.ans
 
 16color.eps:	16color.ans
 	../ansi2gif 16color.ans 16color.eps
+
+
+24bit.png:	24bit.ans
+	../ansi2gif 24bit.ans 24bit.png
+
+24bit.gif:	24bit.ans
+	../ansi2gif 24bit.ans 24bit.gif
 
 
 256color.png:	256color.ans
