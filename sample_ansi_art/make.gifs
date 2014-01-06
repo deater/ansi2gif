@@ -1,0 +1,42 @@
+#/bin/sh
+
+NO_ANIMATE='aitas10.ans aitasad.ans bday1.ans beach1.ans christma.ans clarke.ans computer.ans confirm.ans deater1.ans deaterhe.ans fancydb.ans fishing.ans flag1.ans flag2.ans hallow1.ans macro3.ans macro4.ans memorial.ans ppro.ans register.ans sched96.ans sdays45.ans sdays5.ans sdays67.ans sdays7.ans sdays8.ans ship.ans sship.ans sw3.ans sw3ad1.ans swar2.ans tag.ans tagline.ans tb1ans.ans tb1s1.ans tb1s2.ans tb1s3.ans tb1s4.ans tb1s5.ans tb1s6.ans thanks1.ans utopia1.ans utopia11.ans utopia18.ans utopia22.ans utopia25.ans utopia3.ans utopia4.ans utopia5.ans utopia53.ans utopia6.ans utopia76.ans utopia79.ans utopia83.ans utopia88.ans utopia92.ans utopia94.ans utopias6.ans vmw1.ans vote.ans waiting1.ans world.ans xmas2.ans xmas5.ans'
+ANIMATE='aitasad1.ans macro1.ans sdays1.ans sdays3.ans sdays6.ans sdays78.ans sdays9.ans spinvade.ans sw3ad2.ans tiberi.ans utopia10.ans utopia12.ans utopia13.ans utopia15.ans utopia19.ans utopia21.ans utopia27.ans utopia32.ans utopia44.ans utopia54.ans utopia66.ans utopia7.ans utopia8.ans utopia82.ans utopia85.ans utopia86.ans utopia9.ans utopia97.ans utopia99.ans utopiaen.ans'
+ANIMATE_SLOW='pacman.ans utopia14.ans utopia24.ans utopia26.ans utopia78.ans' 
+SPECIAL='asc.ans'
+BLINK='christ1.ans deater.ans macro2.ans utopia2.ans utopia20.ans xmas1.ans'
+
+mkdir -p ./gifs
+mkdir -p ./gifs/plain
+mkdir -p ./gifs/animated
+mkdir -p ./gifs/blink
+mkdir -p ./gifs/long
+
+ANSI2GIF=../ansi2gif
+
+echo
+echo "Making Plain Gifs in ./gifs/plain"
+echo
+for NAME in $NO_ANIMATE; do 
+   echo "Creating "$NAME.gif; 
+   $ANSI2GIF $NAME ./gifs/plain/$NAME.gif ; 
+done
+
+echo
+echo "Making Long Gifs in ./gifs/long"
+echo
+$ANSI2GIF -y auto asc.ans ./gifs/long/asc.ans.gif 
+
+echo
+echo "Making Animated Gifs in ./gifs/animated"
+echo
+for NAME in $ANIMATE; do echo "Creating "$NAME.gif; $ANSI2GIF -a $NAME ./gifs/animated/$NAME.gif ; done
+for NAME in $ANIMATE_SLOW; do echo "Creating "$NAME.gif; $ANSI2GIF -t 3 -a $NAME ./gifs/animated/$NAME.gif ; done
+
+echo
+echo "Making Blinking Gifs in ./gifs/blink"
+echo
+for NAME in $BLINK; do echo "Creating "$NAME.gif; $ANSI2GIF -b $NAME ./gifs/blink/$NAME.gif; done
+echo
+echo ALL DONE
+echo

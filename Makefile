@@ -33,7 +33,7 @@ clean:
 	rm -f *~
 	cd tests && make clean
 	cd sample_fonts && make clean
-
+	cd sample_ansi_art && make clean
 
 install:	ansi2gif
 	cp ansi2gif /usr/local/bin
