@@ -132,15 +132,26 @@ static void setup_gd_16colors(void) {
 
 static void setup_gd_256colors(void) {
 
-	int i;
-	double grey,r,g,b;
+	int i,r,g,b;
+	double grey;
 
 	/* 6x6x6 color cube */
-	for(i=0x10;i<0xe8;i++) {
-		r=(256.0/6.0)*(double)((i-16)/36);
-		g=(256.0/6.0)*(double)((i-16)/6);
-		b=(256.0/6.0)*(double)((i-16)%6);
-		ansi_color[i] = gdImageColorAllocate(im,(int)r,(int)g,(int)b);
+
+	/* This formula seems to be the one xfc4 term uses */
+	/* when screen-capturing the result and using the  */
+	/* gimp color picker				   */
+
+	for(r=0;r<6;r++) {
+		for(g=0;g<6;g++) {
+			for(b=0;b<6;b++) {
+
+				ansi_color[16+(36*r)+(6*g)+b] =
+					gdImageColorAllocate(im,
+							r==0?0:55+r*40,
+							g==0?0:55+g*40,
+							b==0?0:55+b*40);
+			}
+		}
 	}
 
 	/* 24 steps of greyscale */
