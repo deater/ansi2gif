@@ -231,6 +231,18 @@ static void setup_256colors(int output_type) {
 	allocated_256colors=1;
 }
 
+static int map_24bitcolor(int output_type, int r, int g, int b) {
+
+	if (output_type==OUTPUT_EPS) {
+		return (r<<16)+(g<<8)+b;
+	}
+	else {
+		/* Not exact, matches to the 6x6x6 color */
+		/* TODO: proper 24-bit color support     */
+		return gdImageColorResolve(im,r,g,b);
+	}
+}
+
 static void setup_gd(FILE *out_f,int x_size,int y_size) {
 
 #if 0
@@ -630,10 +642,7 @@ static void parse_color(char *escape_code, int output_type) {
 					setup_256colors(output_type);
 				}
 
-				/* Not exact, matches to the 6x6x6 color */
-				/* TODO: proper 24-bit color support     */
-				fore_color=gdImageColorResolve(im,
-							r,g,b);
+				fore_color=map_24bitcolor(output_type,r,g,b);
 
 				break;
 			}
@@ -683,10 +692,7 @@ static void parse_color(char *escape_code, int output_type) {
 					setup_256colors(output_type);
 				}
 
-				/* Not exact, matches to the 6x6x6 color */
-				/* TODO: proper 24-bit color support     */
-				back_color=gdImageColorResolve(im,
-							r,g,b);
+				back_color=map_24bitcolor(output_type,r,g,b);
 
 				break;
 			}
