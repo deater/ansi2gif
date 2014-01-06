@@ -130,6 +130,8 @@ static void setup_gd_16colors(void) {
 	ansi_color[ANSI_WHITE] =	gdImageColorAllocate(im,0xff,0xff,0xff);
 }
 
+static int allocated_256colors=0;
+
 static void setup_gd_256colors(void) {
 
 	int i,r,g,b;
@@ -159,15 +161,66 @@ static void setup_gd_256colors(void) {
 		grey=(256.0/24.0)*(double)i;
 		ansi_color[0xe8+i] = gdImageColorAllocate(im,grey,grey,grey);
 	}
+
+}
+
+static void setup_eps_256colors(void) {
+
+	int i,r,g,b;
+	double grey;
+
+	/* 6x6x6 color cube */
+
+	/* This formula seems to be the one xfc4 term uses */
+	/* when screen-capturing the result and using the  */
+	/* gimp color picker				   */
+
+	for(r=0;r<6;r++) {
+		for(g=0;g<6;g++) {
+			for(b=0;b<6;b++) {
+
+				ansi_color[16+(36*r)+(6*g)+b] =
+					((r==0?0:55+r*40)<<16)+
+					((g==0?0:55+g*40)<<8)+
+					(b==0?0:55+b*40);
+			}
+		}
+	}
+
+	/* 24 steps of greyscale */
+	for(i=0;i<24;i++) {
+		grey=(256.0/24.0)*(double)i;
+		ansi_color[0xe8+i] = ((int)grey<<16)+((int)grey<<8)+((int)grey);
+	}
+
+}
+
+static void setup_256colors(int output_type) {
+
+	if (output_type==OUTPUT_EPS) {
+		setup_eps_256colors();
+	}
+	else {
+		setup_gd_256colors();
+	}
+
+
+	allocated_256colors=1;
 }
 
 static void setup_gd(FILE *out_f,int x_size,int y_size) {
 
+#if 0
 	im = gdImageCreateTrueColor(x_size*8,y_size*16);  /* Full Screen */
 	im2 = gdImageCreateTrueColor(8,16);               /* One Character */
+#endif
+
+	/* indexed is smaller */
+	im = gdImageCreate(x_size*8,y_size*16);  /* Full Screen */
+	im2 = gdImageCreate(8,16);               /* One Character */
 
 	setup_gd_16colors();
-	setup_gd_256colors();
+//	setup_gd_256colors();
 
 	/* Setup the Colors to Use for character.  Is this needed? */
 	colorC[0] =gdImageColorAllocate(im2,0x00,0x00,0x00);
@@ -192,22 +245,22 @@ static void setup_gd(FILE *out_f,int x_size,int y_size) {
 
 static void setup_eps(FILE *out_f,int x_size, int y_size) {
 
-	ansi_color[0] =(0x00<<16)+(0x00<<8)+0x00;
-	ansi_color[1] =(0x00<<16)+(0x00<<8)+0xAA;
-	ansi_color[2] =(0x00<<16)+(0xAA<<8)+0x00;
-	ansi_color[3] =(0x00<<16)+(0xAA<<8)+0xAA;
-	ansi_color[4] =(0xAA<<16)+(0x00<<8)+0x00;
-	ansi_color[5] =(0xAA<<16)+(0x00<<8)+0xAA;
-	ansi_color[6] =(0xAA<<16)+(0x55<<8)+0x22;
-	ansi_color[7] =(0xAA<<16)+(0xAA<<8)+0xAA;
-	ansi_color[8] =(0x7d<<16)+(0x7d<<8)+0x7d;
-	ansi_color[9] =(0x00<<16)+(0x00<<8)+0xFF;
-	ansi_color[10]=(0x00<<16)+(0xFF<<8)+0x00;
-	ansi_color[11]=(0x00<<16)+(0xFF<<8)+0xFF;
-	ansi_color[12]=(0xFF<<16)+(0x7d<<8)+0x7d;
-	ansi_color[13]=(0xFF<<16)+(0x00<<8)+0xff;
-	ansi_color[14]=(0xFF<<16)+(0xFF<<8)+0x00;
-	ansi_color[15]=(0xFF<<16)+(0xFF<<8)+0xFF;
+	ansi_color[ANSI_BLACK] =(0x00<<16)+(0x00<<8)+0x00;
+	ansi_color[ANSI_BLUE] =(0x00<<16)+(0x00<<8)+0xAA;
+	ansi_color[ANSI_GREEN] =(0x00<<16)+(0xAA<<8)+0x00;
+	ansi_color[ANSI_CYAN] =(0x00<<16)+(0xAA<<8)+0xAA;
+	ansi_color[ANSI_RED] =(0xAA<<16)+(0x00<<8)+0x00;
+	ansi_color[ANSI_PURPLE] =(0xAA<<16)+(0x00<<8)+0xAA;
+	ansi_color[ANSI_BROWN] =(0xAA<<16)+(0x55<<8)+0x22;
+	ansi_color[ANSI_GREY] =(0xAA<<16)+(0xAA<<8)+0xAA;
+	ansi_color[ANSI_DARKGREY] =(0x7d<<16)+(0x7d<<8)+0x7d;
+	ansi_color[ANSI_BRIGHTBLUE] =(0x00<<16)+(0x00<<8)+0xFF;
+	ansi_color[ANSI_BRIGHTGREEN]=(0x00<<16)+(0xFF<<8)+0x00;
+	ansi_color[ANSI_BRIGHTCYAN]=(0x00<<16)+(0xFF<<8)+0xFF;
+	ansi_color[ANSI_BRIGHTRED]=(0xFF<<16)+(0x7d<<8)+0x7d;
+	ansi_color[ANSI_PINK]=(0xFF<<16)+(0x00<<8)+0xff;
+	ansi_color[ANSI_YELLOW]=(0xFF<<16)+(0xFF<<8)+0x00;
+	ansi_color[ANSI_WHITE]=(0xFF<<16)+(0xFF<<8)+0xFF;
 
 	fprintf(out_f,"%%!PS-Adobe-3.0 EPSF-3.0\n");
 	fprintf(out_f,"%%%%Creator: ansi2eps\n");
@@ -378,7 +431,7 @@ static int use_blink=0,invisible=0;
 static int fore_color=0,back_color=0;
 static int intense=0,fore_color_blink=0;
 
-static void parse_color(char *escape_code) {
+static void parse_color(char *escape_code, int output_type) {
 
 	int c,temp_color;
 	static int already_print_color_warning=0;
@@ -564,6 +617,16 @@ static void parse_color(char *escape_code) {
 				pointer=strtok(NULL,";m");
 				if (pointer==NULL) break;
 				c=atoi(pointer);
+
+				if ((c>=16) && (!allocated_256colors)) {
+					setup_256colors(output_type);
+				}
+
+				if (c>255) {
+					fprintf(stderr,"Warning!  Color %d out of range!\n",c);
+					break;
+				}
+
 				fore_color=ansi_color[c];
 			}
 			else {
@@ -589,6 +652,16 @@ static void parse_color(char *escape_code) {
 				pointer=strtok(NULL,";m");
 				if (pointer==NULL) break;
 				c=atoi(pointer);
+
+				if ((c>=16) && (!allocated_256colors)) {
+					setup_256colors(output_type);
+				}
+
+				if (c>255) {
+					fprintf(stderr,"Warning!  Color %d out of range!\n",c);
+					break;
+				}
+
 				back_color=ansi_color[c];
 			}
 			else {
@@ -796,7 +869,7 @@ static void gif_the_text(int animate,int blink,
 
 				/* Oh what fun, figuring out colors */
 				case 'm':
-					parse_color(escape_code);
+					parse_color(escape_code,output_type);
 					break;
 
 				/* Set screen mode */
