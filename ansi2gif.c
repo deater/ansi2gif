@@ -76,24 +76,7 @@ static int parse_numbers(unsigned char *string,int index) {
 	return 0;
 }
 
-
-/*
- blink r g b  i r g b
- */
-
-#define BLINK     128
-#define BACK_RED   64
-#define BACK_GREEN 32
-#define BACK_BLUE  16
-#define INTENSE     8
-#define FORE_RED    4
-#define FORE_GREEN  2
-#define FORE_BLUE   1
-#define BLACK       0
-#define DEFAULT     7
-
-#define FORE_CLEAR 0xf8
-#define BACK_CLEAR 0x8f
+#define BLINK     1
 
 static int ega_color[16];
 static int colorC[16];
@@ -101,6 +84,7 @@ static int colorC[16];
 static gdImagePtr im,im2,im3;
 static vga_font *font_to_use=NULL;
 static unsigned char *screen;
+static unsigned char *attributes;
 static unsigned int *fore_colors;
 static unsigned int *back_colors;
 
@@ -351,7 +335,7 @@ static void finish_eps(FILE *out_f) {
 
 static int use_blink=0,invisible=0;
 static int fore_color=0,back_color=0;
-static int intense=0;
+static int intense=0,fore_color_blink=0;
 
 static void parse_color(unsigned char *escape_code) {
 
@@ -367,6 +351,7 @@ static void parse_color(unsigned char *escape_code) {
 		case 0:
 			fore_color=ega_color[EGA_GREY];
 			back_color=ega_color[EGA_BLACK];
+			fore_color_blink=0;
 			intense=0;
 			break;
 
@@ -406,7 +391,7 @@ static void parse_color(unsigned char *escape_code) {
 
 			/* Blink */
 		case 5:
-			fore_color|=BLINK;
+			fore_color_blink=1;
 			use_blink++;
 			break;
 
@@ -546,11 +531,12 @@ static void gif_the_text(int animate,int blink,
 
 	int x_position,y_position,oldx_position,oldy_position;
 	int x,y,emergency_exit=0;
-	int escape_counter,n,n2,xx,yy;
+	int escape_counter,n,n2,xx,yy,i;
 
 	int backtrack=0;
 
 	screen=calloc(x_size*y_size,sizeof(unsigned char));
+	attributes=calloc(x_size*y_size,sizeof(unsigned char));
 	fore_colors=calloc(x_size*y_size,sizeof(unsigned int));
 	back_colors=calloc(x_size*y_size,sizeof(unsigned int));
 
@@ -782,6 +768,9 @@ static void gif_the_text(int animate,int blink,
 					if (!invisible) {
 						fore_colors[(x_position-1)+((y_position-1)*x_size)]=fore_color;
 						back_colors[(x_position-1)+((y_position-1)*x_size)]=back_color;
+						if (fore_color_blink) {
+							attributes[(x_position-1)+((y_position-1)*x_size)]|=BLINK;
+						}
 					}
 					x_position++;
 				}
@@ -815,27 +804,27 @@ static void gif_the_text(int animate,int blink,
 
 	/* something needs to be done about this nesting */
 	if ((!animate) && (blink)) {
-#if 0
+
 		for(i=0;i<2;i++) {
 			for(y=0;y<y_size;y++) {
 				for(x=0;x<x_size;x++) {
 					for(xx=0;xx<8;xx++) {
 						for(yy=0;yy<16;yy++) {
 							if ( ((unsigned char) (font_to_use->font_data[(screen[x+(y*x_size)]*16)+yy])) & (128>>xx) ) {
-								if ((attributes[x+(y*x_size)]&0x80)) {
+								if ((attributes[x+(y*x_size)]&BLINK)) {
 									if (i) {
-										gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,ega_color[attributes[x+(y*x_size)]&0x0f]);
+										gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,fore_colors[x+(y*x_size)]);
 									}
 									else {
-										gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,ega_color[(attributes[x+(y*x_size)]&0x70)>>4]);
+										gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,back_colors[x+(y*x_size)]);
 									}
 								}
 								else {
-									gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,ega_color[attributes[x+(y*x_size)]&0x0f]);
+									gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,fore_colors[x+(y*x_size)]);
 								}
 							}
 							else {
-								gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,ega_color[(attributes[x+(y*x_size)]&0x70)>>4]);
+								gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,back_colors[x+(y*x_size)]);
 							}
 						}
 					}
@@ -849,7 +838,7 @@ static void gif_the_text(int animate,int blink,
 			animate_gif(out_f,temp_file_name,(1-i),0,0,time_delay,1);
 		}
 		fputc(';',out_f);
-#endif
+
 	}
 
 	if (animate) {
