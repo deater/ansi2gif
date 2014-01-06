@@ -84,7 +84,7 @@ static int parse_numbers(char *string,int index) {
 
 
 static int ansi_color[256];
-static int colorC[16];
+static int colorC[256];
 
 static gdImagePtr im,im2,im3;
 static vga_font *font_to_use=NULL;
@@ -128,11 +128,33 @@ static void setup_gd_16colors(void) {
 	ansi_color[ANSI_PINK] =		gdImageColorAllocate(im,0xff,0x00,0xff);
 	ansi_color[ANSI_BRIGHTCYAN] =	gdImageColorAllocate(im,0x00,0xff,0xff);
 	ansi_color[ANSI_WHITE] =	gdImageColorAllocate(im,0xff,0xff,0xff);
+
+	/* Setup the colors to use for character animation */
+	/*   Can we just share the above?                  */
+
+	colorC[ANSI_BLACK] = 		gdImageColorAllocate(im2,0x00,0x00,0x00);
+	colorC[ANSI_RED] =		gdImageColorAllocate(im2,0xaa,0x00,0x00);
+	colorC[ANSI_GREEN] =		gdImageColorAllocate(im2,0x00,0xaa,0x00);
+	colorC[ANSI_BROWN] =		gdImageColorAllocate(im2,0xaa,0x55,0x22);
+	colorC[ANSI_BLUE] =		gdImageColorAllocate(im2,0x00,0x00,0xaa);
+	colorC[ANSI_PURPLE] =		gdImageColorAllocate(im2,0xaa,0x00,0xaa);
+	colorC[ANSI_CYAN] =		gdImageColorAllocate(im2,0x00,0xaa,0xaa);
+	colorC[ANSI_GREY] =		gdImageColorAllocate(im2,0xaa,0xaa,0xaa);
+	colorC[ANSI_DARKGREY] =		gdImageColorAllocate(im2,0x7d,0x7d,0x7d);
+	colorC[ANSI_BRIGHTRED] =	gdImageColorAllocate(im2,0xff,0x7d,0x7d);
+	colorC[ANSI_BRIGHTGREEN] =	gdImageColorAllocate(im2,0x00,0xff,0x00);
+	colorC[ANSI_YELLOW] =		gdImageColorAllocate(im2,0xff,0xff,0x00);
+	colorC[ANSI_BRIGHTBLUE] =	gdImageColorAllocate(im2,0x00,0x00,0xff);
+	colorC[ANSI_PINK] =		gdImageColorAllocate(im2,0xff,0x00,0xff);
+	colorC[ANSI_BRIGHTCYAN] =	gdImageColorAllocate(im2,0x00,0xff,0xff);
+	colorC[ANSI_WHITE] =		gdImageColorAllocate(im2,0xff,0xff,0xff);
+
+
 }
 
 static int allocated_256colors=0;
 
-static void setup_gd_256colors(void) {
+static void setup_gd_256colors(gdImagePtr *im) {
 
 	int i,r,g,b;
 	double grey;
@@ -148,7 +170,7 @@ static void setup_gd_256colors(void) {
 			for(b=0;b<6;b++) {
 
 				ansi_color[16+(36*r)+(6*g)+b] =
-					gdImageColorAllocate(im,
+					gdImageColorAllocate(*im,
 							r==0?0:55+r*40,
 							g==0?0:55+g*40,
 							b==0?0:55+b*40);
@@ -159,7 +181,7 @@ static void setup_gd_256colors(void) {
 	/* 24 steps of greyscale */
 	for(i=0;i<24;i++) {
 		grey=(256.0/24.0)*(double)i;
-		ansi_color[0xe8+i] = gdImageColorAllocate(im,grey,grey,grey);
+		ansi_color[0xe8+i] = gdImageColorAllocate(*im,grey,grey,grey);
 	}
 
 }
@@ -201,7 +223,8 @@ static void setup_256colors(int output_type) {
 		setup_eps_256colors();
 	}
 	else {
-		setup_gd_256colors();
+		setup_gd_256colors(&im);
+		setup_gd_256colors(&im2);
 	}
 
 
@@ -220,25 +243,7 @@ static void setup_gd(FILE *out_f,int x_size,int y_size) {
 	im2 = gdImageCreate(8,16);               /* One Character */
 
 	setup_gd_16colors();
-//	setup_gd_256colors();
 
-	/* Setup the Colors to Use for character.  Is this needed? */
-	colorC[0] =gdImageColorAllocate(im2,0x00,0x00,0x00);
-	colorC[1] =gdImageColorAllocate(im2,0x00,0x00,0xAA);
-	colorC[2] =gdImageColorAllocate(im2,0x00,0xAA,0x00);
-	colorC[3] =gdImageColorAllocate(im2,0x00,0xAA,0xAA);
-	colorC[4] =gdImageColorAllocate(im2,0xAA,0x00,0x00);
-	colorC[5] =gdImageColorAllocate(im2,0xAA,0x00,0xAA);
-	colorC[6] =gdImageColorAllocate(im2,0xAA,0x55,0x22);
-	colorC[7] =gdImageColorAllocate(im2,0xAA,0xAA,0xAA);
-	colorC[8] =gdImageColorAllocate(im2,0x7d,0x7d,0x7d);
-	colorC[9] =gdImageColorAllocate(im2,0x00,0x00,0xFF);
-	colorC[10]=gdImageColorAllocate(im2,0x00,0xFF,0x00);
-	colorC[11]=gdImageColorAllocate(im2,0x00,0xFF,0xFF);
-	colorC[12]=gdImageColorAllocate(im2,0xFF,0x7d,0x7d);
-	colorC[13]=gdImageColorAllocate(im2,0xFF,0x00,0xFF);
-	colorC[14]=gdImageColorAllocate(im2,0xFF,0xFF,0x00);
-	colorC[15]=gdImageColorAllocate(im2,0xFF,0xFF,0xFF);
 }
 
 
@@ -428,7 +433,7 @@ static void finish_eps(FILE *out_f) {
 }
 
 static int use_blink=0,invisible=0;
-static int fore_color=0,back_color=0;
+static int fore_color=7,back_color=0;
 static int intense=0,fore_color_blink=0;
 
 static void parse_color(char *escape_code, int output_type) {
