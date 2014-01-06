@@ -83,7 +83,7 @@ static int parse_numbers(char *string,int index) {
 }
 
 
-static int ega_color[256];
+static int ansi_color[256];
 static int colorC[16];
 
 static gdImagePtr im,im2,im3;
@@ -93,42 +93,41 @@ static unsigned char *attributes;
 static unsigned int *fore_colors;
 static unsigned int *back_colors;
 
-#define EGA_BLACK	0
-#define EGA_BLUE	1
-#define EGA_GREEN	2
-#define EGA_CYAN	3
-#define EGA_RED		4
-#define EGA_PURPLE	5
-#define EGA_BROWN	6
-#define EGA_GREY	7
-#define EGA_DARKGREY	8
-#define EGA_BRIGHTBLUE	9
-#define EGA_BRIGHTGREEN	10
-#define EGA_BRIGHTCYAN	11
-#define EGA_BRIGHTRED	12
-#define EGA_PINK	13
-#define EGA_YELLOW	14
-#define EGA_WHITE	15
+#define ANSI_BLACK		0
+#define ANSI_RED		1
+#define ANSI_GREEN		2
+#define ANSI_BROWN		3
+#define ANSI_BLUE		4
+#define ANSI_PURPLE		5
+#define ANSI_CYAN		6
+#define ANSI_GREY		7
+#define ANSI_DARKGREY		8
+#define ANSI_BRIGHTRED		9
+#define ANSI_BRIGHTGREEN	10
+#define ANSI_YELLOW		11
+#define ANSI_BRIGHTBLUE		12
+#define ANSI_PINK		13
+#define ANSI_BRIGHTCYAN		14
+#define ANSI_WHITE		15
 
 static void setup_gd_16colors(void) {
 
-	/* Setup the Colors to Use for fullscreen */
-	ega_color[0] =gdImageColorAllocate(im,0x00,0x00,0x00);
-	ega_color[1] =gdImageColorAllocate(im,0x00,0x00,0xAA);
-	ega_color[2] =gdImageColorAllocate(im,0x00,0xAA,0x00);
-	ega_color[3] =gdImageColorAllocate(im,0x00,0xAA,0xAA);
-	ega_color[4] =gdImageColorAllocate(im,0xAA,0x00,0x00);
-	ega_color[5] =gdImageColorAllocate(im,0xAA,0x00,0xAA);
-	ega_color[6] =gdImageColorAllocate(im,0xAA,0x55,0x22);
-	ega_color[7] =gdImageColorAllocate(im,0xAA,0xAA,0xAA);
-	ega_color[8] =gdImageColorAllocate(im,0x7d,0x7d,0x7d);
-	ega_color[9] =gdImageColorAllocate(im,0x00,0x00,0xFF);
-	ega_color[10]=gdImageColorAllocate(im,0x00,0xFF,0x00);
-	ega_color[11]=gdImageColorAllocate(im,0x00,0xFF,0xFF);
-	ega_color[12]=gdImageColorAllocate(im,0xFF,0x7d,0x7d);
-	ega_color[13]=gdImageColorAllocate(im,0xFF,0x00,0xff);
-	ega_color[14]=gdImageColorAllocate(im,0xFF,0xFF,0x00);
-	ega_color[15]=gdImageColorAllocate(im,0xFF,0xFF,0xFF);
+	ansi_color[ANSI_BLACK] = 	gdImageColorAllocate(im,0x00,0x00,0x00);
+	ansi_color[ANSI_RED] =		gdImageColorAllocate(im,0xaa,0x00,0x00);
+	ansi_color[ANSI_GREEN] =	gdImageColorAllocate(im,0x00,0xaa,0x00);
+	ansi_color[ANSI_BROWN] =	gdImageColorAllocate(im,0xaa,0x55,0x22);
+	ansi_color[ANSI_BLUE] =		gdImageColorAllocate(im,0x00,0x00,0xaa);
+	ansi_color[ANSI_PURPLE] =	gdImageColorAllocate(im,0xaa,0x00,0xaa);
+	ansi_color[ANSI_CYAN] =		gdImageColorAllocate(im,0x00,0xaa,0xaa);
+	ansi_color[ANSI_GREY] =		gdImageColorAllocate(im,0xaa,0xaa,0xaa);
+	ansi_color[ANSI_DARKGREY] =	gdImageColorAllocate(im,0x7d,0x7d,0x7d);
+	ansi_color[ANSI_BRIGHTRED] =	gdImageColorAllocate(im,0xff,0x7d,0x7d);
+	ansi_color[ANSI_BRIGHTGREEN] =	gdImageColorAllocate(im,0x00,0xff,0x00);
+	ansi_color[ANSI_YELLOW] =	gdImageColorAllocate(im,0xff,0xff,0x00);
+	ansi_color[ANSI_BRIGHTBLUE] =	gdImageColorAllocate(im,0x00,0x00,0xff);
+	ansi_color[ANSI_PINK] =		gdImageColorAllocate(im,0xff,0x00,0xff);
+	ansi_color[ANSI_BRIGHTCYAN] =	gdImageColorAllocate(im,0x00,0xff,0xff);
+	ansi_color[ANSI_WHITE] =	gdImageColorAllocate(im,0xff,0xff,0xff);
 }
 
 static void setup_gd_256colors(void) {
@@ -141,13 +140,13 @@ static void setup_gd_256colors(void) {
 		r=(256.0/6.0)*(double)((i-16)/36);
 		g=(256.0/6.0)*(double)((i-16)/6);
 		b=(256.0/6.0)*(double)((i-16)%6);
-		ega_color[i] = gdImageColorAllocate(im,(int)r,(int)g,(int)b);
+		ansi_color[i] = gdImageColorAllocate(im,(int)r,(int)g,(int)b);
 	}
 
 	/* 24 steps of greyscale */
 	for(i=0;i<24;i++) {
 		grey=(256.0/24.0)*(double)i;
-		ega_color[0xe8+i] = gdImageColorAllocate(im,grey,grey,grey);
+		ansi_color[0xe8+i] = gdImageColorAllocate(im,grey,grey,grey);
 	}
 }
 
@@ -182,22 +181,22 @@ static void setup_gd(FILE *out_f,int x_size,int y_size) {
 
 static void setup_eps(FILE *out_f,int x_size, int y_size) {
 
-	ega_color[0] =(0x00<<16)+(0x00<<8)+0x00;
-	ega_color[1] =(0x00<<16)+(0x00<<8)+0xAA;
-	ega_color[2] =(0x00<<16)+(0xAA<<8)+0x00;
-	ega_color[3] =(0x00<<16)+(0xAA<<8)+0xAA;
-	ega_color[4] =(0xAA<<16)+(0x00<<8)+0x00;
-	ega_color[5] =(0xAA<<16)+(0x00<<8)+0xAA;
-	ega_color[6] =(0xAA<<16)+(0x55<<8)+0x22;
-	ega_color[7] =(0xAA<<16)+(0xAA<<8)+0xAA;
-	ega_color[8] =(0x7d<<16)+(0x7d<<8)+0x7d;
-	ega_color[9] =(0x00<<16)+(0x00<<8)+0xFF;
-	ega_color[10]=(0x00<<16)+(0xFF<<8)+0x00;
-	ega_color[11]=(0x00<<16)+(0xFF<<8)+0xFF;
-	ega_color[12]=(0xFF<<16)+(0x7d<<8)+0x7d;
-	ega_color[13]=(0xFF<<16)+(0x00<<8)+0xff;
-	ega_color[14]=(0xFF<<16)+(0xFF<<8)+0x00;
-	ega_color[15]=(0xFF<<16)+(0xFF<<8)+0xFF;
+	ansi_color[0] =(0x00<<16)+(0x00<<8)+0x00;
+	ansi_color[1] =(0x00<<16)+(0x00<<8)+0xAA;
+	ansi_color[2] =(0x00<<16)+(0xAA<<8)+0x00;
+	ansi_color[3] =(0x00<<16)+(0xAA<<8)+0xAA;
+	ansi_color[4] =(0xAA<<16)+(0x00<<8)+0x00;
+	ansi_color[5] =(0xAA<<16)+(0x00<<8)+0xAA;
+	ansi_color[6] =(0xAA<<16)+(0x55<<8)+0x22;
+	ansi_color[7] =(0xAA<<16)+(0xAA<<8)+0xAA;
+	ansi_color[8] =(0x7d<<16)+(0x7d<<8)+0x7d;
+	ansi_color[9] =(0x00<<16)+(0x00<<8)+0xFF;
+	ansi_color[10]=(0x00<<16)+(0xFF<<8)+0x00;
+	ansi_color[11]=(0x00<<16)+(0xFF<<8)+0xFF;
+	ansi_color[12]=(0xFF<<16)+(0x7d<<8)+0x7d;
+	ansi_color[13]=(0xFF<<16)+(0x00<<8)+0xff;
+	ansi_color[14]=(0xFF<<16)+(0xFF<<8)+0x00;
+	ansi_color[15]=(0xFF<<16)+(0xFF<<8)+0xFF;
 
 	fprintf(out_f,"%%!PS-Adobe-3.0 EPSF-3.0\n");
 	fprintf(out_f,"%%%%Creator: ansi2eps\n");
@@ -383,8 +382,8 @@ static void parse_color(char *escape_code) {
 
 			/* Normal */
 		case 0:
-			fore_color=ega_color[EGA_GREY];
-			back_color=ega_color[EGA_BLACK];
+			fore_color=ansi_color[ANSI_GREY];
+			back_color=ansi_color[ANSI_BLACK];
 			fore_color_blink=0;
 			intense=0;
 			break;
@@ -392,29 +391,29 @@ static void parse_color(char *escape_code) {
 			/* Intense */
 		case 1:
 			intense=1;
-			if (fore_color==ega_color[EGA_BLACK]) {
-				fore_color=ega_color[EGA_DARKGREY];
+			if (fore_color==ansi_color[ANSI_BLACK]) {
+				fore_color=ansi_color[ANSI_DARKGREY];
 			}
-			if (fore_color==ega_color[EGA_BLUE]) {
-				fore_color=ega_color[EGA_BRIGHTBLUE];
+			if (fore_color==ansi_color[ANSI_BLUE]) {
+				fore_color=ansi_color[ANSI_BRIGHTBLUE];
 			}
-			if (fore_color==ega_color[EGA_GREEN]) {
-				fore_color=ega_color[EGA_BRIGHTGREEN];
+			if (fore_color==ansi_color[ANSI_GREEN]) {
+				fore_color=ansi_color[ANSI_BRIGHTGREEN];
 			}
-			if (fore_color==ega_color[EGA_CYAN]) {
-				fore_color=ega_color[EGA_BRIGHTCYAN];
+			if (fore_color==ansi_color[ANSI_CYAN]) {
+				fore_color=ansi_color[ANSI_BRIGHTCYAN];
 			}
-			if (fore_color==ega_color[EGA_RED]) {
-				fore_color=ega_color[EGA_BRIGHTRED];
+			if (fore_color==ansi_color[ANSI_RED]) {
+				fore_color=ansi_color[ANSI_BRIGHTRED];
 			}
-			if (fore_color==ega_color[EGA_PURPLE]) {
-				fore_color=ega_color[EGA_PINK];
+			if (fore_color==ansi_color[ANSI_PURPLE]) {
+				fore_color=ansi_color[ANSI_PINK];
 			}
-			if (fore_color==ega_color[EGA_BROWN]) {
-				fore_color=ega_color[EGA_YELLOW];
+			if (fore_color==ansi_color[ANSI_BROWN]) {
+				fore_color=ansi_color[ANSI_YELLOW];
 			}
-			if (fore_color==ega_color[EGA_GREY]) {
-				fore_color=ega_color[EGA_WHITE];
+			if (fore_color==ansi_color[ANSI_GREY]) {
+				fore_color=ansi_color[ANSI_WHITE];
 			}
 			break;
 
@@ -444,44 +443,44 @@ static void parse_color(char *escape_code) {
 
 			/* Black Foreground */
 		case 30:
-			if (intense) fore_color=ega_color[EGA_DARKGREY];
-			else fore_color=ega_color[EGA_BLACK];
+			if (intense) fore_color=ansi_color[ANSI_DARKGREY];
+			else fore_color=ansi_color[ANSI_BLACK];
 			break;
 
 			/* Red Foreground */
 		case 31:
-			if (intense) fore_color=ega_color[EGA_BRIGHTRED];
-			else fore_color=ega_color[EGA_RED];
+			if (intense) fore_color=ansi_color[ANSI_BRIGHTRED];
+			else fore_color=ansi_color[ANSI_RED];
 			break;
 
 			/* Green Foreground */
 		case 32:
-			if (intense) fore_color=ega_color[EGA_BRIGHTGREEN];
-			else fore_color=ega_color[EGA_GREEN];
+			if (intense) fore_color=ansi_color[ANSI_BRIGHTGREEN];
+			else fore_color=ansi_color[ANSI_GREEN];
 			break;
 
 			/* Yellow Foreground */
 		case 33:
-			if (intense) fore_color=ega_color[EGA_YELLOW];
-			else fore_color=ega_color[EGA_BROWN];
+			if (intense) fore_color=ansi_color[ANSI_YELLOW];
+			else fore_color=ansi_color[ANSI_BROWN];
 			break;
 
 			/* Blue Foreground */
 		case 34:
-			if (intense) fore_color=ega_color[EGA_BRIGHTBLUE];
-			else fore_color=ega_color[EGA_BLUE];
+			if (intense) fore_color=ansi_color[ANSI_BRIGHTBLUE];
+			else fore_color=ansi_color[ANSI_BLUE];
 			break;
 
 			/* Purple Foreground */
 		case 35:
-			if (intense) fore_color=ega_color[EGA_PINK];
-			else fore_color=ega_color[EGA_PURPLE];
+			if (intense) fore_color=ansi_color[ANSI_PINK];
+			else fore_color=ansi_color[ANSI_PURPLE];
 			break;
 
 			/* Cyan Foreground */
 		case 36:
-			if (intense) fore_color=ega_color[EGA_BRIGHTCYAN];
-			else fore_color=ega_color[EGA_CYAN];
+			if (intense) fore_color=ansi_color[ANSI_BRIGHTCYAN];
+			else fore_color=ansi_color[ANSI_CYAN];
 			break;
 
 			/* "default" foreground */
@@ -489,8 +488,8 @@ static void parse_color(char *escape_code) {
 		case 39:
 			/* White Foreground */
 		case 37:
-			if (intense) fore_color=ega_color[EGA_WHITE];
-			else fore_color=ega_color[EGA_GREY];
+			if (intense) fore_color=ansi_color[ANSI_WHITE];
+			else fore_color=ansi_color[ANSI_GREY];
 			break;
 
 			/* "default" background */
@@ -498,42 +497,42 @@ static void parse_color(char *escape_code) {
 		case 49:
 			/* Black Background */
 		case 40:
-			back_color=ega_color[EGA_BLACK];
+			back_color=ansi_color[ANSI_BLACK];
 			break;
 
 			/* Red Background */
 		case 41:
-			back_color=ega_color[EGA_RED];
+			back_color=ansi_color[ANSI_RED];
 			break;
 
 			/* Green Background */
 		case 42:
-			back_color=ega_color[EGA_GREEN];
+			back_color=ansi_color[ANSI_GREEN];
 			break;
 
 			/* Yellow Background */
 		case 43:
-			back_color=ega_color[EGA_BROWN];
+			back_color=ansi_color[ANSI_BROWN];
 			break;
 
 			/* Blue Background */
 		case 44:
-			back_color=ega_color[EGA_BLUE];
+			back_color=ansi_color[ANSI_BLUE];
 			break;
 
 			/* Purple Background */
 		case 45:
-			back_color=ega_color[EGA_PURPLE];
+			back_color=ansi_color[ANSI_PURPLE];
 			break;
 
 			/* Cyan Background */
 		case 46:
-			back_color=ega_color[EGA_CYAN];
+			back_color=ansi_color[ANSI_CYAN];
 			break;
 
 			/* White Background */
 		case 47:
-			back_color=ega_color[EGA_GREY];
+			back_color=ansi_color[ANSI_GREY];
 			break;
 
 			/* Extended color support -- foreground */
@@ -554,7 +553,7 @@ static void parse_color(char *escape_code) {
 				pointer=strtok(NULL,";m");
 				if (pointer==NULL) break;
 				c=atoi(pointer);
-				fore_color=ega_color[c];
+				fore_color=ansi_color[c];
 			}
 			else {
 				fprintf(stderr,"Warning!  Unknown extended color format!\n");
@@ -579,7 +578,7 @@ static void parse_color(char *escape_code) {
 				pointer=strtok(NULL,";m");
 				if (pointer==NULL) break;
 				c=atoi(pointer);
-				back_color=ega_color[c];
+				back_color=ansi_color[c];
 			}
 			else {
 				fprintf(stderr,"Warning!  Unknown extended color format!\n");
@@ -641,7 +640,7 @@ static void gif_the_text(int animate,int blink,
 		}
 
 		/* Clear Screen */
-		gdImageRectangle(im,0,0,x_size*8,y_size*16,ega_color[0]);
+		gdImageRectangle(im,0,0,x_size*8,y_size*16,ansi_color[0]);
 
 		gdImageGif(im, animate_f);
 		fclose(animate_f);
