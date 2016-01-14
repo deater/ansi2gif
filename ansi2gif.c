@@ -733,10 +733,9 @@ static void parse_color(char *escape_code, int output_type) {
 }
 
 
-static void gif_the_text(int animate,int blink,
-			FILE *in_f,FILE *out_f,
-		        int time_delay,int x_size,int y_size,
-			int output_type) {
+static void gif_the_text(int animate,int blink, int frame_per_refresh,
+						 FILE *in_f,FILE *out_f, int time_delay,int x_size,
+						 int y_size, int output_type) {
 
 	FILE *animate_f=NULL;
 	unsigned char temp_char;
@@ -968,16 +967,24 @@ static void gif_the_text(int animate,int blink,
 					for(xx=0;xx<8;xx++) {
 						for(yy=0;yy<16;yy++) {
 							if ( ((unsigned char) (font_to_use->font_data[(temp_char*16)+yy])) &(128>>xx) )
-								gdImageSetPixel(im2,xx,yy,fore_color);
+								if (frame_per_refresh) 
+									gdImageSetPixel(im,xx+(x_position-1)*8,yy+(y_position-1)*16,fore_color);
+								else 
+									gdImageSetPixel(im2,xx,yy,fore_color);
 							else
-								gdImageSetPixel(im2,xx,yy,back_color);
+								if (frame_per_refresh)
+									gdImageSetPixel(im,xx+(x_position-1)*8,yy+(y_position-1)*16,back_color);
+								else
+									gdImageSetPixel(im2,xx,yy,back_color);
 						}
 					}
-					animate_f=fopen(temp_file_name,"wb");
-					gdImageGif(im2, animate_f);
-					fclose(animate_f);
-					animate_gif(out_f,temp_file_name,0,(x_position-1)*8,
-							(y_position-1)*16,time_delay,0);
+					if (!frame_per_refresh) {
+						animate_f=fopen(temp_file_name,"wb");
+						gdImageGif(im2, animate_f);
+						fclose(animate_f);
+						animate_gif(out_f,temp_file_name,0,(x_position-1)*8,
+								(y_position-1)*16,time_delay,0);
+					}
 				}
 				if (y_position<=y_size) {
 					screen[(x_position-1)+((y_position-1)*x_size)]=temp_char;
@@ -1248,6 +1255,7 @@ static void display_help(char *name_run_as, int just_version) {
 		for(i=0;i<strlen(name_run_as);i++) putchar(' ');
 		printf("  [--xsize X] [--ysize Y] input_file output_file\n\n");
 		printf("   --animate          : Create an animated gif if an animated ansi\n");
+		printf("   --frameperrefresh  : Create a animation frame every screen refresh instead for every character\n");
 		printf("   --blink            : Create an animated gif enabling blinking\n");
 		printf("   --eps              : Output an Encapsulated Postscript\n");
 		// printf("   --color X=0xRRGGBB : Set color \"X\" [0-16] to hex value RRGGBB [a number]\n");
@@ -1343,6 +1351,7 @@ int main(int argc, char **argv) {
 	int time_delay=DEFAULT_TIMEDELAY;
 	int x_size=DEFAULT_XSIZE,y_size=DEFAULT_YSIZE;
 	int animate=0,blink=0;
+	int frame_per_refresh=0;
 	char *font_name=NULL,*input_name=NULL,*output_name=NULL;
 	char *endptr;
 	int option_index = 0;
@@ -1352,6 +1361,7 @@ int main(int argc, char **argv) {
 
 	static struct option long_options[] = {
 		{"animate", 0, NULL, 'a'},
+		{"frameperrefresh", 0, NULL, 'r'},
 		{"blink", 0, NULL, 'b'},
 		{"color", 1, NULL, 'c'},
 		{"eps", 0, NULL, 'e'},
@@ -1377,7 +1387,7 @@ int main(int argc, char **argv) {
 	/*--  PARSE COMMAND LINE PARAMATERS --*/
 	opterr=0;
 	while ((c = getopt_long (argc, argv,
-			"abc:ef:ghpt:vx:y:",
+			"abc:ref:ghpt:vx:y:",
 			long_options,&option_index))!=-1) {
 		switch (c) {
 		case 'a':	animate=1;
@@ -1386,6 +1396,8 @@ int main(int argc, char **argv) {
 				break;
 		case 'c':	fprintf (stderr,"\nWarning! Setting alternate "
 					"colors not implemented yet.\n\n");
+				break;
+		case 'r':	frame_per_refresh=1;
 				break;
 		case 'e':	output_type=OUTPUT_EPS;
 				break;
@@ -1504,7 +1516,7 @@ int main(int argc, char **argv) {
 		rewind(input_f);
 	}
 
-	gif_the_text(animate,blink,input_f,output_f,
+	gif_the_text(animate,blink,frame_per_refresh,input_f,output_f,
 			time_delay,x_size,y_size,output_type);
 
 	fclose(input_f);
