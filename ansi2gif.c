@@ -11,6 +11,10 @@
 #include <ctype.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <errno.h>
 
 #include <gd.h>
 
@@ -30,7 +34,7 @@
 #define OUTPUT_PNG 0
 #define OUTPUT_GIF 1
 #define OUTPUT_EPS 2
-#define OUTPUT_MPG 3
+#define OUTPUT_MP4 3
 
 /* Attributes */
 #define BLINK		1
@@ -217,7 +221,7 @@ static int map_24bitcolor(int output_type, int r, int g, int b) {
 	}
 }
 
-static void setup_gd(FILE *out_f,int x_size,int y_size) {
+static void setup_gd(int x_size,int y_size) {
 
 #if 0
 	image_screen = gdImageCreateTrueColor(x_size*8,y_size*16);  /* Full Screen */
@@ -411,12 +415,12 @@ static void finish_gd(FILE *out_f) {
 	/* Destroy the image in memory. */
 	gdImageDestroy(image_screen);
 	gdImageDestroy(image_char);
-	fclose(out_f);
+
 }
 
 
 static void finish_eps(FILE *out_f) {
-	fclose(out_f);
+
 }
 
 static int use_blink=0,invisible=0;
@@ -733,6 +737,9 @@ static void gif_the_text(int animate, int blink,
 	int backtrack=0;
 
 	int movie_frame=0;
+	FILE *movie_f;
+	char movie_path[BUFSIZ];
+	char movie_filename[BUFSIZ];
 
 	/* Allocate space for screen and attributes */
 	screen=calloc(x_size*y_size,sizeof(unsigned char));
@@ -749,7 +756,7 @@ static void gif_the_text(int animate, int blink,
 		setup_eps(out_f,x_size,y_size);
 	}
 	else {
-		setup_gd(out_f,x_size,y_size);
+		setup_gd(x_size,y_size);
 	}
 
 	if ((animate||blink) && (output_type!=OUTPUT_GIF)) {
@@ -758,7 +765,6 @@ static void gif_the_text(int animate, int blink,
 	}
 
 	/* If animated gif, create initial empty full-screen image */
-	/* FIXME: use mkstemp()? */
 	if (animate) {
 
 		/* Write out animated gif file header */
@@ -778,6 +784,20 @@ static void gif_the_text(int animate, int blink,
 					time_delay,//Delay
 					gdDisposalNone,// Disposal
 					NULL);//prevPtr
+
+	}
+
+	/* FIXME, pass the name from command line somehow */
+	if (create_movie) {
+		sprintf(movie_path,"ansi2gif-%d/",getpid());
+		if (mkdir(movie_path,0777)<0) {
+			fprintf(stderr,"Error making dir %s, %s\n",
+				movie_path,strerror(errno));
+		}
+
+		/* Clear Screen */
+		gdImageRectangle(image_screen,0,0,x_size*8,y_size*16,
+				ansi_color[0]);
 
 	}
 
@@ -882,6 +902,7 @@ static void gif_the_text(int animate, int blink,
 							screen[x+(y*x_size)]=' ';
 					x_position=1;
 					y_position=1;
+					/* FIXME: need to actually clear screen? */
 					if (animate) {
 						gdImageGifAnimAdd(
 							image_screen, // ptr
@@ -893,6 +914,17 @@ static void gif_the_text(int animate, int blink,
 							gdDisposalNone,// Disposal
 							NULL);//prevPtr
 
+					}
+					if (create_movie) {
+						sprintf(movie_filename,"%s/ansi2gif_%08d.png",movie_path,movie_frame);
+						movie_frame++;
+						movie_f=fopen(movie_filename,"wb");
+						if (movie_f==NULL) {
+							fprintf(stderr,"Error creating filename %s\n",movie_filename);
+							exit(1);
+						}
+						gdImagePng(image_screen, movie_f);
+						fclose(movie_f);
 					}
 					break;
 
@@ -912,6 +944,26 @@ static void gif_the_text(int animate, int blink,
 							gdDisposalNone,// Disposal
 							NULL);//prevPtr
 					}
+					/* FIXME: test this */
+					/* also should it be bg color, not black? */
+					if (create_movie) {
+
+						gdImageRectangle(image_screen,
+							(x_position-1)*8,(y_position-1)*16,
+							(x_size-1)*8,(y_position)*16,
+							gdImageColorAllocate(image_line,0x00,0x00,0x00));
+
+						sprintf(movie_filename,"%s/ansi2gif_%08d.png",movie_path,movie_frame);
+						movie_frame++;
+						movie_f=fopen(movie_filename,"wb");
+						if (movie_f==NULL) {
+							fprintf(stderr,"Error creating filename %s\n",movie_filename);
+							exit(1);
+						}
+						gdImagePng(image_screen, movie_f);
+						fclose(movie_f);
+					}
+
 					if (y_position<y_size)
 						for(x=x_position;x<x_size;x++)
 							screen[x+(y_position*x_size)]=' ';
@@ -960,7 +1012,7 @@ static void gif_the_text(int animate, int blink,
 					y_position++;
 				}
 
-				if (animate && y_position<=y_size) {  /* Animate it if we have the right */
+				if ( (animate||create_movie) && y_position<=y_size) {  /* Animate it if we have the right */
 					for(xx=0;xx<8;xx++) {
 						for(yy=0;yy<16;yy++) {
 							if ( ((unsigned char) (font_to_use->font_data[(temp_char*16)+yy])) &(128>>xx) )
@@ -977,13 +1029,15 @@ static void gif_the_text(int animate, int blink,
 					}
 					if (!frame_per_refresh) {
 						if (create_movie) {
-#if 0
-							sprintf(temp_file_name,"/tmp/ansi2gif_%i_%08d.png",getpid(),movie_frame);
+							sprintf(movie_filename,"%s/ansi2gif_%08d.png",movie_path,movie_frame);
 							movie_frame++;
-							animate_f=fopen(temp_file_name,"wb");
-							gdImagePng(image_screen, animate_f);
-							fclose(animate_f);
-#endif
+							movie_f=fopen(movie_filename,"wb");
+							if (movie_f==NULL) {
+								fprintf(stderr,"Error creating filename %s\n",movie_filename);
+								exit(1);
+							}
+							gdImagePng(image_screen, movie_f);
+							fclose(movie_f);
 						}
 						else {
 						gdImageGifAnimAdd(
@@ -1093,7 +1147,7 @@ static void gif_the_text(int animate, int blink,
 		gdImageGifAnimEnd(out_f);
 	}
 
-	if ((backtrack) && !(animate)) {
+	if ((backtrack) && !(animate||create_movie)) {
 		fprintf(stderr,"Warning!  The cursor moved backwards and animated output was not selected.\n"
 			       "          For proper output, you might want to try again with --animate\n\n"); 
 	}
@@ -1106,21 +1160,22 @@ static void gif_the_text(int animate, int blink,
 	/* Finish movie with 30 copies of the last frame */
 	/* So the movie doesn't just end */
 	if (create_movie) {
-#if 0
 		for(i=0;i<30;i++) {
-			sprintf(temp_file_name,
-				"/tmp/ansi2gif_%i_%08d.png",
-				getpid(),movie_frame);
+			sprintf(movie_filename,
+				"%s/ansi2gif_%08d.png",
+				movie_path,movie_frame);
 			movie_frame++;
-			animate_f=fopen(temp_file_name,"wb");
-			gdImagePng(image_screen, animate_f);
-			fclose(animate_f);
+			movie_f=fopen(movie_filename,"wb");
+			if (movie_f==NULL) {
+				fprintf(stderr,"Error opening %s\n",
+					movie_filename);
+				exit(0);
+			}
+			gdImagePng(image_screen, movie_f);
+			fclose(movie_f);
 		}
-#endif
+
 	}
-
-
-
 
 	if (output_type==OUTPUT_EPS) {
 		finish_eps(out_f);
@@ -1129,11 +1184,6 @@ static void gif_the_text(int animate, int blink,
 		finish_gd(out_f);
 	}
 
-#if 0
-	if (!create_movie) {
-		unlink(temp_file_name);
-	}
-#endif
 }
 
 
@@ -1457,7 +1507,7 @@ int main(int argc, char **argv) {
 		case 'h':	display_help(argv[0],0);
 				break;
 		case 'm':	create_movie=1;
-				output_type=OUTPUT_MPG;
+				output_type=OUTPUT_MP4;
 				break;
 		case 'p':	output_type=OUTPUT_PNG;
 				break;
@@ -1526,11 +1576,9 @@ int main(int argc, char **argv) {
 	}
 
 	if (optind<argc-1) {
+
+
 		output_name=strdup(argv[optind+1]);
-		if ( (output_f=fopen(output_name,"wb"))==NULL){
-			fprintf(stderr,"\nInvalid Output File: %s\n",output_name);
-			return 1;
-		}
 
 		/* Autodetect output filetype */
 		if (strlen(output_name)>4) {
@@ -1544,10 +1592,21 @@ int main(int argc, char **argv) {
 				output_type=OUTPUT_GIF;
 			}
 			if (!strcmp(output_name+(strlen(output_name)-4),".mpg")) {
-				output_type=OUTPUT_MPG;
+				output_type=OUTPUT_MP4;
 			}
 
 		}
+
+		if (output_type!=OUTPUT_MP4) {
+			if ( (output_f=fopen(output_name,"wb"))==NULL){
+				fprintf(stderr,"\nInvalid Output File: %s\n",output_name);
+				return 1;
+			}
+		}
+		else {
+			output_f=NULL;
+		}
+
 	}
 	else {
 		fprintf(stderr,"Using standard output...\n" );
@@ -1577,6 +1636,12 @@ int main(int argc, char **argv) {
 			time_delay,x_size,y_size,output_type);
 
 	fclose(input_f);
+	if (output_f!=NULL) fclose(output_f);
 
+	if (output_type==OUTPUT_MP4) {
+		printf("Created images in ansi2gif-%d, to make movie try the following:\n"
+			"\tffmpeg -f image2 -pattern_type glob -i \'ansi2gif-%d/*.png\' %s\n\n",
+			getpid(),getpid(),output_name);
+	}
 	return 0;
 }
