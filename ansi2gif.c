@@ -25,7 +25,7 @@
 #define XFONTSIZE 7.1
 #define YFONTSIZE 13
 
-#define VERSION "0.10.0"
+#define VERSION "0.11.0"
 
 #define OUTPUT_PNG 0
 #define OUTPUT_GIF 1
@@ -760,12 +760,25 @@ static void gif_the_text(int animate, int blink,
 	/* If animated gif, create initial empty full-screen image */
 	/* FIXME: use mkstemp()? */
 	if (animate) {
+
+		/* Write out animated gif file header */
+		gdImageGifAnimBegin(image_screen, out_f,
+			USE_GLOBAL_COLORMAP, DO_NOT_LOOP_ANIMATION);
+
 		/* Clear Screen */
 		gdImageRectangle(image_screen,0,0,x_size*8,y_size*16,
 				ansi_color[0]);
-		/* Write out to animated gif file */
-		gdImageGifAnimBegin(image_screen, out_f,
-			USE_GLOBAL_COLORMAP, DO_NOT_LOOP_ANIMATION);
+
+		/* Write first frame */
+		gdImageGifAnimAdd(image_screen, // ptr
+					out_f,	     // file
+					0,	    //localCM
+					0,         //LeftOfs
+					0,        //TopOfs
+					time_delay,//Delay
+					gdDisposalNone,// Disposal
+					NULL);//prevPtr
+
 	}
 
 	/* Clear the memory used to store the image */
@@ -873,7 +886,7 @@ static void gif_the_text(int animate, int blink,
 						gdImageGifAnimAdd(
 							image_screen, // ptr
 							out_f,	     // file
-							USE_GLOBAL_COLORMAP,	    //localCM
+							0,	    //localCM
 							0,         //LeftOfs
 							0,        //TopOfs
 							time_delay,//Delay
@@ -892,7 +905,7 @@ static void gif_the_text(int animate, int blink,
 						gdImageGifAnimAdd(
 							image_line, // ptr
 							out_f,	     // file
-							USE_GLOBAL_COLORMAP,	    //localCM
+							0,	    //localCM
 							(x_position-1)*8,         //LeftOfs
 							(y_position-1)*16,        //TopOfs
 							time_delay,//Delay
@@ -976,7 +989,7 @@ static void gif_the_text(int animate, int blink,
 						gdImageGifAnimAdd(
 							image_char, // ptr
 							out_f,	     // file
-							USE_GLOBAL_COLORMAP,	    //localCM
+							0,	    //localCM
 							(x_position-1)*8,         //LeftOfs
 							(y_position-1)*16,        //TopOfs
 							time_delay,//Delay
@@ -1065,7 +1078,7 @@ static void gif_the_text(int animate, int blink,
 
 		gdImageGifAnimAdd(image_screen, // ptr
 					out_f,	     // file
-					USE_GLOBAL_COLORMAP,	    //localCM
+					0,	    //localCM
 					0,         //LeftOfs
 					0,        //TopOfs
 					time_delay,//Delay
