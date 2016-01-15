@@ -16,8 +16,6 @@
 
 #include "default_font.h"
 #include "pcfont.h"
-#include "whirlgif.h"
-
 
 #define DEFAULT_TIMEDELAY 1 /* 1/100 of a second */
 #define DEFAULT_XSIZE    80
@@ -137,7 +135,7 @@ static void setup_gd_256colors(gdImagePtr im) {
 
 	/* 6x6x6 color cube */
 
-	/* This formula seems to be the one xfc4 term uses */
+	/* This formula seems to be the one xfce4 term uses */
 	/* when screen-capturing the result and using the  */
 	/* gimp color picker				   */
 
@@ -709,15 +707,22 @@ static void parse_color(char *escape_code, int output_type) {
 	} while(pointer);
 }
 
+#define USE_GLOBAL_COLORMAP  1
+#define USE_LOCAL_COLORMAP   0
+
+#define LOOP_ANIMATION_FOREVER  0
+#define DO_NOT_LOOP_ANIMATION  -1
+#define AUTO_FRAME_DISPOSAL     1
+#define ANIMATION_DELAY         10 /* in milliseconds */
+
 
 static void gif_the_text(int animate, int blink,
 			int frame_per_refresh, int create_movie,
 			FILE *in_f,FILE *out_f, int time_delay,int x_size,
 			int y_size, int output_type) {
 
-	FILE *animate_f=NULL;
-	unsigned char temp_char;
 
+	int temp_char;
 
 	char escape_code[BUFSIZ];
 	char temp_file_name[BUFSIZ];
@@ -730,11 +735,17 @@ static void gif_the_text(int animate, int blink,
 
 	int movie_frame=0;
 
+	/* Allocate space for screen and attributes */
 	screen=calloc(x_size*y_size,sizeof(unsigned char));
 	attributes=calloc(x_size*y_size,sizeof(unsigned char));
 	fore_colors=calloc(x_size*y_size,sizeof(unsigned int));
 	back_colors=calloc(x_size*y_size,sizeof(unsigned int));
+	if ((!screen)||(!attributes)||(!fore_colors)||(!back_colors)) {
+		fprintf(stderr,"Error allocating memory!\n");
+		exit(0);
+	}
 
+	/* Setup the various output methods */
 	if (output_type==OUTPUT_EPS) {
 		setup_eps(out_f,x_size,y_size);
 	}
@@ -747,30 +758,15 @@ static void gif_the_text(int animate, int blink,
 		exit(-1);
 	}
 
+	/* If animated gif, create initial empty full-screen image */
+	/* FIXME: use mkstemp()? */
 	if (animate) {
-		/* FIXME: use mkstemp()? */
-		if (create_movie) {
-			sprintf(temp_file_name,"/tmp/ansi2gif_%i_%08d.png",
-					getpid(),movie_frame);
-			movie_frame++;
-		} else {
-			sprintf(temp_file_name,"/tmp/ansi2gif_%i.gif",
-					getpid());
-		}
-
-		if ( (animate_f=fopen(temp_file_name,"wb"))==NULL) {
-			fprintf(stderr,"Error!  Cannot open file %s to store temporary "
-				"animation info!\n\n",temp_file_name);
-			exit(1);
-		}
-
 		/* Clear Screen */
-		gdImageRectangle(image_screen,0,0,x_size*8,y_size*16,ansi_color[0]);
-
-		gdImageGif(image_screen, animate_f);
-		fclose(animate_f);
-
-		animate_gif(out_f,temp_file_name,1,0,0,time_delay,0);
+		gdImageRectangle(image_screen,0,0,x_size*8,y_size*16,
+				ansi_color[0]);
+		/* Write out to animaged gif file */
+		gdImageGifAnimBegin(image_screen, out_f,
+			USE_GLOBAL_COLORMAP, DO_NOT_LOOP_ANIMATION);
 	}
 
 	/* Clear the memory used to store the image */
@@ -787,12 +783,12 @@ static void gif_the_text(int animate, int blink,
 	oldx_position=1; oldy_position=1;
 
 	/* FIXME: fgetc()? */
-	while (  ((fread(&temp_char,sizeof(temp_char),1,in_f))>0)
+	while (  ( (temp_char=fgetc(in_f))>0 )
 		&& (!emergency_exit) ) {
 
 		/* Did somebody say escape?? */
 		if (temp_char==27) {
-			fread(&temp_char,sizeof(temp_char),1,in_f);
+			temp_char=fgetc(in_f);
 			/* If after escape we have '[' we have an escape code */
 			if (temp_char!='[') fprintf(stderr,"False Escape\n");
 			else {
@@ -800,7 +796,7 @@ static void gif_the_text(int animate, int blink,
 
 				/* Read in the command */
 				while (!isalpha(temp_char)) {
-					fread(&temp_char,sizeof(temp_char),1,in_f);
+					temp_char=fgetc(in_f);
 					escape_code[escape_counter]=temp_char;
 					escape_counter++;
 				}
@@ -875,6 +871,7 @@ static void gif_the_text(int animate, int blink,
 					x_position=1;
 					y_position=1;
 					if (animate) {
+#if 0
 						if ( (animate_f=fopen(temp_file_name,"wb"))==NULL) {
 							fprintf(stderr,"Error!  Cannot open file %s to store temporary animation info.\n",
 								temp_file_name);
@@ -883,24 +880,35 @@ static void gif_the_text(int animate, int blink,
 						gdImageGif(image_screen, animate_f);
 						fclose(animate_f);
 						animate_gif(out_f,temp_file_name,0,0,0,time_delay,0);
+#endif
+						gdImageGifAnimAdd(
+							image_screen, // ptr
+							out_f,	     // file
+							USE_GLOBAL_COLORMAP,	    //localCM
+							0,         //LeftOfs
+							0,        //TopOfs
+							time_delay,//Delay
+							gdDisposalNone,// Disposal
+							NULL);//prevPtr
+
 					}
 					break;
 
 				/* Clear to end of line */
 				case 'K':
 					if (animate) {
-						if ( (animate_f=fopen(temp_file_name,"wb"))==NULL) {
-							fprintf(stderr,"Error!  Cannot open file %s to store temporary animation info.\n",
-								temp_file_name);
-							exit(1);
-						}
 						image_line=gdImageCreateTrueColor((x_size-(x_position-1))*8,16);
 						gdImageRectangle(image_line,0,0,(x_size-(x_position-1))*8,16,gdImageColorAllocate(image_line,0x00,0x00,0x00));
 
-						gdImageGif(image_line, animate_f);
-						fclose(animate_f);
-						gdImageDestroy(image_line);
-						animate_gif(out_f,temp_file_name,0,(x_position-1)*8,(y_position-1)*16,time_delay,0);  
+						gdImageGifAnimAdd(
+							image_line, // ptr
+							out_f,	     // file
+							USE_GLOBAL_COLORMAP,	    //localCM
+							(x_position-1)*8,         //LeftOfs
+							(y_position-1)*16,        //TopOfs
+							time_delay,//Delay
+							gdDisposalNone,// Disposal
+							NULL);//prevPtr
 					}
 					if (y_position<y_size)
 						for(x=x_position;x<x_size;x++)
@@ -967,18 +975,26 @@ static void gif_the_text(int animate, int blink,
 					}
 					if (!frame_per_refresh) {
 						if (create_movie) {
+#if 0
 							sprintf(temp_file_name,"/tmp/ansi2gif_%i_%08d.png",getpid(),movie_frame);
 							movie_frame++;
 							animate_f=fopen(temp_file_name,"wb");
 							gdImagePng(image_screen, animate_f);
 							fclose(animate_f);
+#endif
 						}
 						else {
-							animate_f=fopen(temp_file_name,"wb");
-							gdImageGif(image_char, animate_f);
-							fclose(animate_f);
-							animate_gif(out_f,temp_file_name,0,(x_position-1)*8,
-									(y_position-1)*16,time_delay,0);
+						gdImageGifAnimAdd(
+							image_char, // ptr
+							out_f,	     // file
+							USE_GLOBAL_COLORMAP,	    //localCM
+							(x_position-1)*8,         //LeftOfs
+							(y_position-1)*16,        //TopOfs
+							time_delay,//Delay
+							gdDisposalNone,// Disposal
+							NULL);//prevPtr
+
+
 						}
 					}
 				}
@@ -1059,17 +1075,23 @@ static void gif_the_text(int animate, int blink,
 					getpid(),movie_frame);
 				movie_frame++;
 			}
+#if 0
 			animate_f=fopen(temp_file_name,"wb");
 			gdImageGif(image_screen, animate_f);
 			fclose(animate_f);
 			animate_gif(out_f,temp_file_name,(1-i),0,0,time_delay,1);
+#endif
 		}
+#if 0
 		fputc(';',out_f);
-
+#endif
 	}
 
 	if (animate) {
+#if 0
 		fputc(';', out_f); /* End of Gif file */
+#endif
+		gdImageGifAnimEnd(out_f);
 	}
 
 	if ((backtrack) && !(animate)) {
@@ -1085,6 +1107,7 @@ static void gif_the_text(int animate, int blink,
 	/* Finish movie with 30 copies of the last frame */
 	/* So the movie doesn't just end */
 	if (create_movie) {
+#if 0
 		for(i=0;i<30;i++) {
 			sprintf(temp_file_name,
 				"/tmp/ansi2gif_%i_%08d.png",
@@ -1094,6 +1117,7 @@ static void gif_the_text(int animate, int blink,
 			gdImagePng(image_screen, animate_f);
 			fclose(animate_f);
 		}
+#endif
 	}
 
 
@@ -1106,9 +1130,11 @@ static void gif_the_text(int animate, int blink,
 		finish_gd(out_f);
 	}
 
+#if 0
 	if (!create_movie) {
 		unlink(temp_file_name);
 	}
+#endif
 }
 
 
