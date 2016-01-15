@@ -43,7 +43,7 @@ HOW IT WORKS
 
      The fonts used are standard "vga" fonts.  Basically they are just
      4k files holding a set of 256x8x16 data, where there are 256 characters,
-     16 lines, and then each line is reperesented as a 8bit character.  The
+     16 lines, and then each line is represented as a 8bit character.  The
      8 bit character, in binary, tells what bits to turn on and off to make
      an 8x16 font.  
      
@@ -83,27 +83,30 @@ INSTALLING
 USAGE
 ---------------------------------------------------------------------
 
- ansi2gif [--animate] [--blink] [--eps] [--font fontfile]
-          [--gif] [--help] [--png] [--version] [--timedelay T]
-	  [--xsize X] [--ysize Y] input_file output_file
-		     
-       --animate          : Create an animated gif if an animated ansi
-       --blink            : Create an animated gif enabling blinking
-       --eps              : output an EPS file
-       --font fontfile    : Use vgafont "filename" to create gif
-       --gif              : output a GIF file
-       --help             : show this help
-       --png		  : output a PNG file
-       --timedelay T      : Delay T 100ths of seconds between each displayed
-                            character in animate mode.
-       --version          : Print version information
-       --xsize X          : Make the output X characters wide
-       --ysize Y          : Make the output Y characters long.
-                            use "auto" to figure out on the fly.
-      
-    Instead of the long option, a single dash and the first letter of the
-    option may be substituted.  That is, "-a" instead of "--animate"
+ansi2gif v 0.11.0 by Vince Weaver <vince _at_ deater.net>
 
+ ./ansi2gif [--animate] [--blink] [--eps] [--font fontfile]
+            [--gif] [--help] [--png] [--version] [--timedelay T]
+            [--xsize X] [--ysize Y] input_file output_file
+
+   --animate          : Create an animated gif if an animated ansi
+   --frameperrefresh  : Create a animation frame every screen refresh instead for every character
+   --movie            : Make a series of frames, don't delete (for movies)
+   --blink            : Create an animated gif enabling blinking
+   --eps              : Output an Encapsulated Postscript
+   --font fontfile    : Use vgafont "filename" to create gif
+   --gif              : output a GIF file
+   --help             : show this help
+   --png              : output a PNG file
+   --timedelay T      : Delay T 100ths of seconds between each displayed
+                        character in animate mode.
+   --version          : Print version information
+   --xsize X          : Make the output X characters wide
+   --ysize Y          : Make the output Y characters long.
+                        use "auto" to figure out on the fly.
+
+Instead of the long option, a single dash and the first letter of the
+option may be substituted.  That is, "-a" instead of "--animate"
 
 ------------------------------------------------------------------------
 WHERE TO DOWNLOAD
@@ -135,3 +138,4 @@ THANKS
 -------
 Vince Weaver (15 January 2016)
 vince _at_ deater.net
+
