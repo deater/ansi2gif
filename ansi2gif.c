@@ -733,9 +733,10 @@ static void parse_color(char *escape_code, int output_type) {
 }
 
 
-static void gif_the_text(int animate,int blink, int frame_per_refresh,
-						 FILE *in_f,FILE *out_f, int time_delay,int x_size,
-						 int y_size, int output_type) {
+static void gif_the_text(int animate, int blink,
+			int frame_per_refresh, int create_movie,
+			FILE *in_f,FILE *out_f, int time_delay,int x_size,
+			int y_size, int output_type) {
 
 	FILE *animate_f=NULL;
 	unsigned char temp_char;
@@ -749,6 +750,8 @@ static void gif_the_text(int animate,int blink, int frame_per_refresh,
 	int escape_counter,n,n2,xx,yy,i;
 
 	int backtrack=0;
+
+	int movie_frame=0;
 
 	screen=calloc(x_size*y_size,sizeof(unsigned char));
 	attributes=calloc(x_size*y_size,sizeof(unsigned char));
@@ -769,7 +772,14 @@ static void gif_the_text(int animate,int blink, int frame_per_refresh,
 
 	if (animate) {
 		/* FIXME: use mkstemp()? */
-		sprintf(temp_file_name,"/tmp/ansi2gif_%i.gif",getpid());
+		if (create_movie) {
+			sprintf(temp_file_name,"/tmp/ansi2gif_%i_%08d.png",
+					getpid(),movie_frame);
+			movie_frame++;
+		} else {
+			sprintf(temp_file_name,"/tmp/ansi2gif_%i.gif",
+					getpid());
+		}
 
 		if ( (animate_f=fopen(temp_file_name,"wb"))==NULL) {
 			fprintf(stderr,"Error!  Cannot open file %s to store temporary "
@@ -967,23 +977,32 @@ static void gif_the_text(int animate,int blink, int frame_per_refresh,
 					for(xx=0;xx<8;xx++) {
 						for(yy=0;yy<16;yy++) {
 							if ( ((unsigned char) (font_to_use->font_data[(temp_char*16)+yy])) &(128>>xx) )
-								if (frame_per_refresh) 
+								if ((frame_per_refresh) || (create_movie)) 
 									gdImageSetPixel(im,xx+(x_position-1)*8,yy+(y_position-1)*16,fore_color);
 								else 
 									gdImageSetPixel(im2,xx,yy,fore_color);
 							else
-								if (frame_per_refresh)
+								if ((frame_per_refresh) || (create_movie))
 									gdImageSetPixel(im,xx+(x_position-1)*8,yy+(y_position-1)*16,back_color);
 								else
 									gdImageSetPixel(im2,xx,yy,back_color);
 						}
 					}
 					if (!frame_per_refresh) {
-						animate_f=fopen(temp_file_name,"wb");
-						gdImageGif(im2, animate_f);
-						fclose(animate_f);
-						animate_gif(out_f,temp_file_name,0,(x_position-1)*8,
-								(y_position-1)*16,time_delay,0);
+						if (create_movie) {
+							sprintf(temp_file_name,"/tmp/ansi2gif_%i_%08d.png",getpid(),movie_frame);
+							movie_frame++;
+							animate_f=fopen(temp_file_name,"wb");
+							gdImagePng(im, animate_f);
+							fclose(animate_f);
+						}
+						else {
+							animate_f=fopen(temp_file_name,"wb");
+							gdImageGif(im2, animate_f);
+							fclose(animate_f);
+							animate_gif(out_f,temp_file_name,0,(x_position-1)*8,
+									(y_position-1)*16,time_delay,0);
+						}
 					}
 				}
 				if (y_position<=y_size) {
@@ -1054,7 +1073,15 @@ static void gif_the_text(int animate,int blink, int frame_per_refresh,
 				}
 			}
 
-			sprintf(temp_file_name,"/tmp/ansi2gif_%i.gif",getpid());
+			if (create_movie) {
+				sprintf(temp_file_name,
+					"/tmp/ansi2gif_%i.png",getpid());
+			} else {
+				sprintf(temp_file_name,
+					"/tmp/ansi2gif_%i_%08d.gif",
+					getpid(),movie_frame);
+				movie_frame++;
+			}
 			animate_f=fopen(temp_file_name,"wb");
 			gdImageGif(im, animate_f);
 			fclose(animate_f);
@@ -1078,6 +1105,23 @@ static void gif_the_text(int animate,int blink, int frame_per_refresh,
 			       "          to run with the --blink option to create an animated gif.\n\n");
 	}
 
+	/* Finish movie with 30 copies of the last frame */
+	/* So the movie doesn't just end */
+	if (create_movie) {
+		for(i=0;i<30;i++) {
+			sprintf(temp_file_name,
+				"/tmp/ansi2gif_%i_%08d.png",
+				getpid(),movie_frame);
+			movie_frame++;
+			animate_f=fopen(temp_file_name,"wb");
+			gdImagePng(im, animate_f);
+			fclose(animate_f);
+		}
+	}
+
+
+
+
 	if (output_type==OUTPUT_EPS) {
 		finish_eps(out_f);
 	}
@@ -1085,8 +1129,9 @@ static void gif_the_text(int animate,int blink, int frame_per_refresh,
 		finish_gd(out_f);
 	}
 
-	unlink(temp_file_name);
-
+	if (!create_movie) {
+		unlink(temp_file_name);
+	}
 }
 
 
@@ -1256,6 +1301,7 @@ static void display_help(char *name_run_as, int just_version) {
 		printf("  [--xsize X] [--ysize Y] input_file output_file\n\n");
 		printf("   --animate          : Create an animated gif if an animated ansi\n");
 		printf("   --frameperrefresh  : Create a animation frame every screen refresh instead for every character\n");
+		printf("   --movie            : Make a series of frames, don't delete (for movies)\n");
 		printf("   --blink            : Create an animated gif enabling blinking\n");
 		printf("   --eps              : Output an Encapsulated Postscript\n");
 		// printf("   --color X=0xRRGGBB : Set color \"X\" [0-16] to hex value RRGGBB [a number]\n");
@@ -1351,7 +1397,7 @@ int main(int argc, char **argv) {
 	int time_delay=DEFAULT_TIMEDELAY;
 	int x_size=DEFAULT_XSIZE,y_size=DEFAULT_YSIZE;
 	int animate=0,blink=0;
-	int frame_per_refresh=0;
+	int frame_per_refresh=0,create_movie=0;
 	char *font_name=NULL,*input_name=NULL,*output_name=NULL;
 	char *endptr;
 	int option_index = 0;
@@ -1361,13 +1407,14 @@ int main(int argc, char **argv) {
 
 	static struct option long_options[] = {
 		{"animate", 0, NULL, 'a'},
-		{"frameperrefresh", 0, NULL, 'r'},
 		{"blink", 0, NULL, 'b'},
 		{"color", 1, NULL, 'c'},
 		{"eps", 0, NULL, 'e'},
 		{"font", 1, NULL, 'f'},
+		{"frameperrefresh", 0, NULL, 'r'},
 		{"gif", 0, NULL, 'g'},
 		{"help", 0, NULL, 'h'},
+		{"movie", 0, NULL, 'm'},
 		{"output",1,NULL,'o'},
 		{"png",0,NULL,'p'},
 		{"timedelay",1,NULL,'t'},
@@ -1376,6 +1423,7 @@ int main(int argc, char **argv) {
 		{"ysize",1,NULL,'y'},
 		{0,0,0,0}
 	};
+
 
 //	fprintf(stderr,"Run as %s\n",argv[0]);
 
@@ -1397,8 +1445,6 @@ int main(int argc, char **argv) {
 		case 'c':	fprintf (stderr,"\nWarning! Setting alternate "
 					"colors not implemented yet.\n\n");
 				break;
-		case 'r':	frame_per_refresh=1;
-				break;
 		case 'e':	output_type=OUTPUT_EPS;
 				break;
 		case 'f':	font_supplied=1;
@@ -1408,7 +1454,12 @@ int main(int argc, char **argv) {
 				break;
 		case 'h':	display_help(argv[0],0);
 				break;
+		case 'm':	create_movie=1;
+				output_type=OUTPUT_PNG;
+				break;
 		case 'p':	output_type=OUTPUT_PNG;
+				break;
+		case 'r':	frame_per_refresh=1;
 				break;
 		case 't':	time_delay=strtol(optarg,&endptr,10);
 				if ( endptr == optarg ) {
@@ -1516,7 +1567,8 @@ int main(int argc, char **argv) {
 		rewind(input_f);
 	}
 
-	gif_the_text(animate,blink,frame_per_refresh,input_f,output_f,
+	gif_the_text(animate,blink,
+			frame_per_refresh,create_movie,input_f,output_f,
 			time_delay,x_size,y_size,output_type);
 
 	fclose(input_f);

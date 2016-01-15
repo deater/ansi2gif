@@ -1,0 +1,4 @@
+A bit of a hack, but to make a movie of an animated ansi:
+
+ansi2gif -a --movie ./utopia21.ans out.gif
+ffmpeg -f image2 -pattern_type glob -i '/tmp/ansi*png' output.mp4
