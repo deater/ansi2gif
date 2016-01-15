@@ -81,7 +81,7 @@ static int parse_numbers(char *string,int index) {
 
 static int ansi_color[256];
 
-static gdImagePtr image_screen,image_char,image_line;
+static gdImagePtr image_screen,image_screen2,image_char,image_line;
 static vga_font *font_to_use=NULL;
 static unsigned char *screen;
 static unsigned char *attributes;
@@ -725,7 +725,6 @@ static void gif_the_text(int animate, int blink,
 	int temp_char;
 
 	char escape_code[BUFSIZ];
-	char temp_file_name[BUFSIZ];
 
 	int x_position,y_position,oldx_position,oldy_position;
 	int x,y,emergency_exit=0;
@@ -764,7 +763,7 @@ static void gif_the_text(int animate, int blink,
 		/* Clear Screen */
 		gdImageRectangle(image_screen,0,0,x_size*8,y_size*16,
 				ansi_color[0]);
-		/* Write out to animaged gif file */
+		/* Write out to animated gif file */
 		gdImageGifAnimBegin(image_screen, out_f,
 			USE_GLOBAL_COLORMAP, DO_NOT_LOOP_ANIMATION);
 	}
@@ -871,16 +870,6 @@ static void gif_the_text(int animate, int blink,
 					x_position=1;
 					y_position=1;
 					if (animate) {
-#if 0
-						if ( (animate_f=fopen(temp_file_name,"wb"))==NULL) {
-							fprintf(stderr,"Error!  Cannot open file %s to store temporary animation info.\n",
-								temp_file_name);
-							exit(1);
-						}
-						gdImageGif(image_screen, animate_f);
-						fclose(animate_f);
-						animate_gif(out_f,temp_file_name,0,0,0,time_delay,0);
-#endif
 						gdImageGifAnimAdd(
 							image_screen, // ptr
 							out_f,	     // file
@@ -1040,57 +1029,54 @@ static void gif_the_text(int animate, int blink,
 	/* something needs to be done about this nesting */
 	if ((!animate) && (blink)) {
 
+		/* Write out to animated gif file */
+		gdImageGifAnimBegin(image_screen, out_f,
+					USE_GLOBAL_COLORMAP,
+					LOOP_ANIMATION_FOREVER);
+
+		image_screen2 = gdImageCreate(x_size*8,y_size*16);  /* Full Screen */
+
 		for(i=0;i<2;i++) {
-			for(y=0;y<y_size;y++) {
-				for(x=0;x<x_size;x++) {
-					for(xx=0;xx<8;xx++) {
-						for(yy=0;yy<16;yy++) {
-							if ( ((unsigned char) (font_to_use->font_data[(screen[x+(y*x_size)]*16)+yy])) & (128>>xx) ) {
-								if ((attributes[x+(y*x_size)]&BLINK)) {
-									if (i) {
-										gdImageSetPixel(image_screen,(x*8)+xx,(y*16)+yy,fore_colors[x+(y*x_size)]);
-									}
-									else {
-										gdImageSetPixel(image_screen,(x*8)+xx,(y*16)+yy,back_colors[x+(y*x_size)]);
-									}
-								}
-								else {
-									gdImageSetPixel(image_screen,(x*8)+xx,(y*16)+yy,fore_colors[x+(y*x_size)]);
-								}
-							}
-							else {
-								gdImageSetPixel(image_screen,(x*8)+xx,(y*16)+yy,back_colors[x+(y*x_size)]);
-							}
-						}
+		for(y=0;y<y_size;y++) {
+		for(x=0;x<x_size;x++) {
+		for(xx=0;xx<8;xx++) {
+		for(yy=0;yy<16;yy++) {
+			if ( (font_to_use->font_data[
+				(screen[x+(y*x_size)]*16)+yy]) & (128>>xx) ) {
+				if ((attributes[x+(y*x_size)]&BLINK)) {
+					if (i) {
+						gdImageSetPixel(image_screen,(x*8)+xx,(y*16)+yy,fore_colors[x+(y*x_size)]);
+					}
+					else {
+						gdImageSetPixel(image_screen,(x*8)+xx,(y*16)+yy,back_colors[x+(y*x_size)]);
 					}
 				}
+				else {
+					gdImageSetPixel(image_screen,(x*8)+xx,(y*16)+yy,fore_colors[x+(y*x_size)]);
+				}
 			}
-
-			if (create_movie) {
-				sprintf(temp_file_name,
-					"/tmp/ansi2gif_%i.png",getpid());
-			} else {
-				sprintf(temp_file_name,
-					"/tmp/ansi2gif_%i_%08d.gif",
-					getpid(),movie_frame);
-				movie_frame++;
+			else {
+				gdImageSetPixel(image_screen,(x*8)+xx,(y*16)+yy,back_colors[x+(y*x_size)]);
 			}
-#if 0
-			animate_f=fopen(temp_file_name,"wb");
-			gdImageGif(image_screen, animate_f);
-			fclose(animate_f);
-			animate_gif(out_f,temp_file_name,(1-i),0,0,time_delay,1);
-#endif
 		}
-#if 0
-		fputc(';',out_f);
-#endif
+		}
+		}
+		}
+
+		gdImageGifAnimAdd(image_screen, // ptr
+					out_f,	     // file
+					USE_GLOBAL_COLORMAP,	    //localCM
+					0,         //LeftOfs
+					0,        //TopOfs
+					time_delay,//Delay
+					gdDisposalNone,// Disposal
+					NULL);//prevPtr
+
+		}
+
 	}
 
-	if (animate) {
-#if 0
-		fputc(';', out_f); /* End of Gif file */
-#endif
+	if ((animate) || (blink)) {
 		gdImageGifAnimEnd(out_f);
 	}
 

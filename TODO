@@ -9,5 +9,4 @@ Far-Out-There
 + Scrolling animated gif.  I.e. simulate the console when y>y_size
 
 + Input from stdin, output to stdout?
-+ create safe temp files in /tmp
 + Fuzz testing
