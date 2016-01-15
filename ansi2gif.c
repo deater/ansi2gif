@@ -82,9 +82,8 @@ static int parse_numbers(char *string,int index) {
 
 
 static int ansi_color[256];
-static int colorC[256];
 
-static gdImagePtr im,im2,im3;
+static gdImagePtr image_screen,image_char,image_line;
 static vga_font *font_to_use=NULL;
 static unsigned char *screen;
 static unsigned char *attributes;
@@ -108,7 +107,7 @@ static unsigned int *back_colors;
 #define ANSI_BRIGHTCYAN		14
 #define ANSI_WHITE		15
 
-static void setup_gd_16colors(void) {
+static void setup_gd_16colors(gdImagePtr im) {
 
 	ansi_color[ANSI_BLACK] = 	gdImageColorAllocate(im,0x00,0x00,0x00);
 	ansi_color[ANSI_RED] =		gdImageColorAllocate(im,0xaa,0x00,0x00);
@@ -127,32 +126,11 @@ static void setup_gd_16colors(void) {
 	ansi_color[ANSI_BRIGHTCYAN] =	gdImageColorAllocate(im,0x00,0xff,0xff);
 	ansi_color[ANSI_WHITE] =	gdImageColorAllocate(im,0xff,0xff,0xff);
 
-	/* Setup the colors to use for character animation */
-	/*   Can we just share the above?                  */
-
-	colorC[ANSI_BLACK] = 		gdImageColorAllocate(im2,0x00,0x00,0x00);
-	colorC[ANSI_RED] =		gdImageColorAllocate(im2,0xaa,0x00,0x00);
-	colorC[ANSI_GREEN] =		gdImageColorAllocate(im2,0x00,0xaa,0x00);
-	colorC[ANSI_BROWN] =		gdImageColorAllocate(im2,0xaa,0x55,0x22);
-	colorC[ANSI_BLUE] =		gdImageColorAllocate(im2,0x00,0x00,0xaa);
-	colorC[ANSI_PURPLE] =		gdImageColorAllocate(im2,0xaa,0x00,0xaa);
-	colorC[ANSI_CYAN] =		gdImageColorAllocate(im2,0x00,0xaa,0xaa);
-	colorC[ANSI_GREY] =		gdImageColorAllocate(im2,0xaa,0xaa,0xaa);
-	colorC[ANSI_DARKGREY] =		gdImageColorAllocate(im2,0x7d,0x7d,0x7d);
-	colorC[ANSI_BRIGHTRED] =	gdImageColorAllocate(im2,0xff,0x7d,0x7d);
-	colorC[ANSI_BRIGHTGREEN] =	gdImageColorAllocate(im2,0x00,0xff,0x00);
-	colorC[ANSI_YELLOW] =		gdImageColorAllocate(im2,0xff,0xff,0x00);
-	colorC[ANSI_BRIGHTBLUE] =	gdImageColorAllocate(im2,0x00,0x00,0xff);
-	colorC[ANSI_PINK] =		gdImageColorAllocate(im2,0xff,0x00,0xff);
-	colorC[ANSI_BRIGHTCYAN] =	gdImageColorAllocate(im2,0x00,0xff,0xff);
-	colorC[ANSI_WHITE] =		gdImageColorAllocate(im2,0xff,0xff,0xff);
-
-
 }
 
 static int allocated_256colors=0;
 
-static void setup_gd_256colors(gdImagePtr *im) {
+static void setup_gd_256colors(gdImagePtr im) {
 
 	int i,r,g,b;
 	double grey;
@@ -168,7 +146,7 @@ static void setup_gd_256colors(gdImagePtr *im) {
 			for(b=0;b<6;b++) {
 
 				ansi_color[16+(36*r)+(6*g)+b] =
-					gdImageColorAllocate(*im,
+					gdImageColorAllocate(im,
 							r==0?0:55+r*40,
 							g==0?0:55+g*40,
 							b==0?0:55+b*40);
@@ -179,7 +157,7 @@ static void setup_gd_256colors(gdImagePtr *im) {
 	/* 24 steps of greyscale */
 	for(i=0;i<24;i++) {
 		grey=(256.0/24.0)*(double)i;
-		ansi_color[0xe8+i] = gdImageColorAllocate(*im,grey,grey,grey);
+		ansi_color[0xe8+i] = gdImageColorAllocate(im,grey,grey,grey);
 	}
 
 }
@@ -221,8 +199,8 @@ static void setup_256colors(int output_type) {
 		setup_eps_256colors();
 	}
 	else {
-		setup_gd_256colors(&im);
-		setup_gd_256colors(&im2);
+		setup_gd_256colors(image_screen);
+		setup_gd_256colors(image_char);
 	}
 
 
@@ -237,22 +215,23 @@ static int map_24bitcolor(int output_type, int r, int g, int b) {
 	else {
 		/* Not exact, matches to the 6x6x6 color */
 		/* TODO: proper 24-bit color support     */
-		return gdImageColorResolve(im,r,g,b);
+		return gdImageColorResolve(image_screen,r,g,b);
 	}
 }
 
 static void setup_gd(FILE *out_f,int x_size,int y_size) {
 
 #if 0
-	im = gdImageCreateTrueColor(x_size*8,y_size*16);  /* Full Screen */
-	im2 = gdImageCreateTrueColor(8,16);               /* One Character */
+	image_screen = gdImageCreateTrueColor(x_size*8,y_size*16);  /* Full Screen */
+	image_char = gdImageCreateTrueColor(8,16);               /* One Character */
 #endif
 
 	/* indexed is smaller */
-	im = gdImageCreate(x_size*8,y_size*16);  /* Full Screen */
-	im2 = gdImageCreate(8,16);               /* One Character */
+	image_screen = gdImageCreate(x_size*8,y_size*16);  /* Full Screen */
+	image_char = gdImageCreate(8,16);               /* One Character */
 
-	setup_gd_16colors();
+	setup_gd_16colors(image_screen);
+	setup_gd_16colors(image_char);
 
 }
 
@@ -410,11 +389,11 @@ static void display_gd(FILE *out_f,int output_type,int x_size,int y_size) {
 	       if (
 		    (font_to_use->font_data[(screen[x+(y*x_size)]*16)+yy]) &
 	            (128>>xx) ) {
-		    gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,
+		    gdImageSetPixel(image_screen,(x*8)+xx,(y*16)+yy,
 				    fore_colors[x+(y*x_size)]);
 	       }
                else {
-		    gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,
+		    gdImageSetPixel(image_screen,(x*8)+xx,(y*16)+yy,
 				    back_colors[x+(y*x_size)]);
 	       }
 				}
@@ -423,17 +402,17 @@ static void display_gd(FILE *out_f,int output_type,int x_size,int y_size) {
 	}
 
 	if (output_type==OUTPUT_PNG) {
-		gdImagePng(im, out_f);
+		gdImagePng(image_screen, out_f);
 	}
 	else {
-		gdImageGif(im, out_f);
+		gdImageGif(image_screen, out_f);
 	}
 }
 
 static void finish_gd(FILE *out_f) {
 	/* Destroy the image in memory. */
-	gdImageDestroy(im);
-	gdImageDestroy(im2);
+	gdImageDestroy(image_screen);
+	gdImageDestroy(image_char);
 	fclose(out_f);
 }
 
@@ -786,9 +765,9 @@ static void gif_the_text(int animate, int blink,
 		}
 
 		/* Clear Screen */
-		gdImageRectangle(im,0,0,x_size*8,y_size*16,ansi_color[0]);
+		gdImageRectangle(image_screen,0,0,x_size*8,y_size*16,ansi_color[0]);
 
-		gdImageGif(im, animate_f);
+		gdImageGif(image_screen, animate_f);
 		fclose(animate_f);
 
 		animate_gif(out_f,temp_file_name,1,0,0,time_delay,0);
@@ -901,7 +880,7 @@ static void gif_the_text(int animate, int blink,
 								temp_file_name);
 							exit(1);
 						}
-						gdImageGif(im, animate_f);
+						gdImageGif(image_screen, animate_f);
 						fclose(animate_f);
 						animate_gif(out_f,temp_file_name,0,0,0,time_delay,0);
 					}
@@ -915,12 +894,12 @@ static void gif_the_text(int animate, int blink,
 								temp_file_name);
 							exit(1);
 						}
-						im3=gdImageCreateTrueColor((x_size-(x_position-1))*8,16);
-						gdImageRectangle(im3,0,0,(x_size-(x_position-1))*8,16,gdImageColorAllocate(im3,0x00,0x00,0x00));
+						image_line=gdImageCreateTrueColor((x_size-(x_position-1))*8,16);
+						gdImageRectangle(image_line,0,0,(x_size-(x_position-1))*8,16,gdImageColorAllocate(image_line,0x00,0x00,0x00));
 
-						gdImageGif(im3, animate_f);
+						gdImageGif(image_line, animate_f);
 						fclose(animate_f);
-						gdImageDestroy(im3);
+						gdImageDestroy(image_line);
 						animate_gif(out_f,temp_file_name,0,(x_position-1)*8,(y_position-1)*16,time_delay,0);  
 					}
 					if (y_position<y_size)
@@ -976,14 +955,14 @@ static void gif_the_text(int animate, int blink,
 						for(yy=0;yy<16;yy++) {
 							if ( ((unsigned char) (font_to_use->font_data[(temp_char*16)+yy])) &(128>>xx) )
 								if ((frame_per_refresh) || (create_movie)) 
-									gdImageSetPixel(im,xx+(x_position-1)*8,yy+(y_position-1)*16,fore_color);
+									gdImageSetPixel(image_screen,xx+(x_position-1)*8,yy+(y_position-1)*16,fore_color);
 								else 
-									gdImageSetPixel(im2,xx,yy,fore_color);
+									gdImageSetPixel(image_char,xx,yy,fore_color);
 							else
 								if ((frame_per_refresh) || (create_movie))
-									gdImageSetPixel(im,xx+(x_position-1)*8,yy+(y_position-1)*16,back_color);
+									gdImageSetPixel(image_screen,xx+(x_position-1)*8,yy+(y_position-1)*16,back_color);
 								else
-									gdImageSetPixel(im2,xx,yy,back_color);
+									gdImageSetPixel(image_char,xx,yy,back_color);
 						}
 					}
 					if (!frame_per_refresh) {
@@ -991,12 +970,12 @@ static void gif_the_text(int animate, int blink,
 							sprintf(temp_file_name,"/tmp/ansi2gif_%i_%08d.png",getpid(),movie_frame);
 							movie_frame++;
 							animate_f=fopen(temp_file_name,"wb");
-							gdImagePng(im, animate_f);
+							gdImagePng(image_screen, animate_f);
 							fclose(animate_f);
 						}
 						else {
 							animate_f=fopen(temp_file_name,"wb");
-							gdImageGif(im2, animate_f);
+							gdImageGif(image_char, animate_f);
 							fclose(animate_f);
 							animate_gif(out_f,temp_file_name,0,(x_position-1)*8,
 									(y_position-1)*16,time_delay,0);
@@ -1053,18 +1032,18 @@ static void gif_the_text(int animate, int blink,
 							if ( ((unsigned char) (font_to_use->font_data[(screen[x+(y*x_size)]*16)+yy])) & (128>>xx) ) {
 								if ((attributes[x+(y*x_size)]&BLINK)) {
 									if (i) {
-										gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,fore_colors[x+(y*x_size)]);
+										gdImageSetPixel(image_screen,(x*8)+xx,(y*16)+yy,fore_colors[x+(y*x_size)]);
 									}
 									else {
-										gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,back_colors[x+(y*x_size)]);
+										gdImageSetPixel(image_screen,(x*8)+xx,(y*16)+yy,back_colors[x+(y*x_size)]);
 									}
 								}
 								else {
-									gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,fore_colors[x+(y*x_size)]);
+									gdImageSetPixel(image_screen,(x*8)+xx,(y*16)+yy,fore_colors[x+(y*x_size)]);
 								}
 							}
 							else {
-								gdImageSetPixel(im,(x*8)+xx,(y*16)+yy,back_colors[x+(y*x_size)]);
+								gdImageSetPixel(image_screen,(x*8)+xx,(y*16)+yy,back_colors[x+(y*x_size)]);
 							}
 						}
 					}
@@ -1081,7 +1060,7 @@ static void gif_the_text(int animate, int blink,
 				movie_frame++;
 			}
 			animate_f=fopen(temp_file_name,"wb");
-			gdImageGif(im, animate_f);
+			gdImageGif(image_screen, animate_f);
 			fclose(animate_f);
 			animate_gif(out_f,temp_file_name,(1-i),0,0,time_delay,1);
 		}
@@ -1112,7 +1091,7 @@ static void gif_the_text(int animate, int blink,
 				getpid(),movie_frame);
 			movie_frame++;
 			animate_f=fopen(temp_file_name,"wb");
-			gdImagePng(im, animate_f);
+			gdImagePng(image_screen, animate_f);
 			fclose(animate_f);
 		}
 	}
@@ -1453,7 +1432,7 @@ int main(int argc, char **argv) {
 		case 'h':	display_help(argv[0],0);
 				break;
 		case 'm':	create_movie=1;
-				output_type=OUTPUT_PNG;
+				output_type=OUTPUT_MPG;
 				break;
 		case 'p':	output_type=OUTPUT_PNG;
 				break;
@@ -1538,6 +1517,9 @@ int main(int argc, char **argv) {
 			}
 			if (!strcmp(output_name+(strlen(output_name)-4),".gif")) {
 				output_type=OUTPUT_GIF;
+			}
+			if (!strcmp(output_name+(strlen(output_name)-4),".mpg")) {
+				output_type=OUTPUT_MPG;
 			}
 
 		}
