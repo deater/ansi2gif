@@ -1157,10 +1157,10 @@ static void gif_the_text(int animate, int blink,
 			       "          to run with the --blink option to create an animated gif.\n\n");
 	}
 
-	/* Finish movie with 30 copies of the last frame */
+	/* Finish movie with 100 copies of the last frame */
 	/* So the movie doesn't just end */
 	if (create_movie) {
-		for(i=0;i<30;i++) {
+		for(i=0;i<100;i++) {
 			sprintf(movie_filename,
 				"%s/ansi2gif_%08d.png",
 				movie_path,movie_frame);
@@ -1640,7 +1640,8 @@ int main(int argc, char **argv) {
 
 	if (output_type==OUTPUT_MP4) {
 		printf("Created images in ansi2gif-%d, to make movie try the following:\n"
-			"\tffmpeg -f image2 -pattern_type glob -i \'ansi2gif-%d/*.png\' %s\n\n",
+			"\tffmpeg -r 50 -f image2 -pattern_type glob -i \'ansi2gif-%d/*.png\' %s\n"
+			"Change the framerate (speed) by changing the -r option\n\n",
 			getpid(),getpid(),output_name);
 	}
 	return 0;
