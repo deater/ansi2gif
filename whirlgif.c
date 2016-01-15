@@ -271,85 +271,91 @@ static void ClearTree(int cc, GifTree *root) {
  * read Gif header
  */
 static void GifScreenHeader(FILE *fp, FILE *fout, int firstTime) {
-  int temp, i;
 
-  for(i = 0; i < 6; i++) {
-    temp = Xgetc(fp);
-    if(i == 4 && temp == '7') temp = '9';
-    if (firstTime) fputc(temp, fout);
-  }
+	int temp, i;
 
-  gifscrn.width = GifGetShort(fp);
-  gifscrn.height = GifGetShort(fp);
-  temp = Xgetc(fp);
-  if (firstTime) {
-    GifPutShort(gifscrn.width, fout);
-    GifPutShort(gifscrn.height, fout);
-    fputc(temp, fout);
-  }
-  gifscrn.m  =  temp & 0x80;
-  gifscrn.cres   = (temp & 0x70) >> 4;
-  gifscrn.pixbits =  temp & 0x07;
-
-  gifscrn.bc  = Xgetc(fp);
-  if (firstTime) {
-    if (debugFlag) fprintf(stderr, "First Time ... ");
-    if(GifBgcolor) gifscrn.bc = GifBgcolor & 0xff;
-    fputc(gifscrn.bc, fout);
-  }
-
-  temp = Xgetc(fp);
-  if (firstTime)  {
-    fputc(temp, fout);
-    if ( minimize && gifscrn.bc == 0 ) {
-      /* Set a pseudo screen filled with the background color.
-	 This is only done for background color index == 0 because
-	 of Netscape and I.E.'s strange handling of backgrounds not
-	 covered by an image.
-      */
-      temp = gifscrn.width * gifscrn.height;
-      if (( pixold = (uint8_t *)malloc(temp * sizeof(uint8_t)) ) == NULL ) {
-		fprintf(stderr,"No memory for image\n");
-		exit(1);
+	for(i = 0; i < 6; i++) {
+		temp = Xgetc(fp);
+		if(i == 4 && temp == '7') temp = '9';
+		if (firstTime) fputc(temp, fout);
 	}
-      if (debugFlag) fprintf(stderr, "BACKGROUND = %d\n", gifscrn.bc);
-      while (temp > 0) pixold[--temp] = 0; /* gifscrn.bc; */
-      gifimageold.left = gifimageold.top = 0;
-      gifimageold.width = gifscrn.width;
-      gifimageold.height = gifscrn.height;
-      gifimageold.pixbits = gifscrn.pixbits;
-    }
-  }
-  imagec = gifPtwo[(1+gifscrn.pixbits)];
 
-  if (debugFlag)
-    fprintf(stderr, "Screen #%d: %dx%dx%d m=%d cres=%d bkgnd=%d pix=%d\n",
-      count, gifscrn.width, gifscrn.height, imagec, gifscrn.m, gifscrn.cres,
-      gifscrn.bc, gifscrn.pixbits);
+	gifscrn.width = GifGetShort(fp);
+	gifscrn.height = GifGetShort(fp);
+	temp = Xgetc(fp);
+	if (firstTime) {
+		GifPutShort(gifscrn.width, fout);
+		GifPutShort(gifscrn.height, fout);
+		fputc(temp, fout);
+	}
 
-  if (gifscrn.m) {
-    for(i = 0; i < imagec; i++) {
-      gifCmap[i].cmap.red   = temp = Xgetc(fp);
-      if (firstTime) fputc(temp, fout);
-      gifCmap[i].cmap.green = temp = Xgetc(fp);
-      if (firstTime) fputc(temp, fout);
-      gifCmap[i].cmap.blue  = temp = Xgetc(fp);
-      if (firstTime) fputc(temp, fout);
+	gifscrn.m  =  temp & 0x80;
+	gifscrn.cres   = (temp & 0x70) >> 4;
+	gifscrn.pixbits =  temp & 0x07;
 
-    if(firstTime && (global.trans.type==TRANS_RGB && global.trans.valid==0) ) {
-      if (global.trans.red == gifCmap[i].cmap.red &&
-	  global.trans.green == gifCmap[i].cmap.green &&
-	  global.trans.blue == gifCmap[i].cmap.blue) {
-	if(debugFlag > 1) fprintf(stderr, " Transparent match at %d\n", i);
-	global.trans.map = i;
-	global.trans.valid = 1;
-      }
-      else
-	if(debugFlag > 1) fprintf(stderr, "No transp. RGB=(%x,%x,%x)\n",
-	 gifCmap[i].cmap.red, gifCmap[i].cmap.green, gifCmap[i].cmap.blue);
-    }
-    }
-  }
+	gifscrn.bc  = Xgetc(fp);
+	if (firstTime) {
+		if (debugFlag) fprintf(stderr, "First Time ... ");
+		if(GifBgcolor) gifscrn.bc = GifBgcolor & 0xff;
+		fputc(gifscrn.bc, fout);
+	}
+
+	temp = Xgetc(fp);
+	if (firstTime)  {
+		fputc(temp, fout);
+		if ( minimize && gifscrn.bc == 0 ) {
+			/* Set a pseudo screen filled with the background color.
+			This is only done for background color index == 0 because
+			of Netscape and I.E.'s strange handling of backgrounds not
+			covered by an image.
+			*/
+			temp = gifscrn.width * gifscrn.height;
+			if (( pixold = (uint8_t *)malloc(temp * sizeof(uint8_t)) ) == NULL ) {
+				fprintf(stderr,"No memory for image\n");
+				exit(1);
+			}
+			if (debugFlag) {
+				fprintf(stderr, "BACKGROUND = %d\n", gifscrn.bc);
+			}
+			while (temp > 0) pixold[--temp] = 0; /* gifscrn.bc; */
+			gifimageold.left = gifimageold.top = 0;
+			gifimageold.width = gifscrn.width;
+			gifimageold.height = gifscrn.height;
+			gifimageold.pixbits = gifscrn.pixbits;
+		}
+	}
+	imagec = gifPtwo[(1+gifscrn.pixbits)];
+
+	if (debugFlag) {
+		fprintf(stderr, "Screen #%d: %dx%dx%d m=%d cres=%d bkgnd=%d pix=%d\n",
+			count, gifscrn.width, gifscrn.height, imagec, gifscrn.m, gifscrn.cres,
+			gifscrn.bc, gifscrn.pixbits);
+	}
+
+	if (gifscrn.m) {
+		for(i = 0; i < imagec; i++) {
+			gifCmap[i].cmap.red   = temp = Xgetc(fp);
+			if (firstTime) fputc(temp, fout);
+			gifCmap[i].cmap.green = temp = Xgetc(fp);
+			if (firstTime) fputc(temp, fout);
+			gifCmap[i].cmap.blue  = temp = Xgetc(fp);
+			if (firstTime) fputc(temp, fout);
+
+			if(firstTime && (global.trans.type==TRANS_RGB && global.trans.valid==0) ) {
+				if (global.trans.red == gifCmap[i].cmap.red &&
+	  				global.trans.green == gifCmap[i].cmap.green &&
+	  				global.trans.blue == gifCmap[i].cmap.blue) {
+					if(debugFlag > 1) fprintf(stderr, " Transparent match at %d\n", i);
+					global.trans.map = i;
+					global.trans.valid = 1;
+      				}
+				else {
+					if(debugFlag > 1) fprintf(stderr, "No transp. RGB=(%x,%x,%x)\n",
+								gifCmap[i].cmap.red, gifCmap[i].cmap.green, gifCmap[i].cmap.blue);
+				}
+			}
+		}
+	}
 }
 
 
@@ -387,73 +393,74 @@ static char *AddCodeToBuffer(int code, short n, char *buf) {
 
 static void GifEncode(FILE *fout, uint8_t *pixels, int depth, int siz) {
 
-   
-  GifTree *first = &GifRoot, *newNode, *curNode;
-  uint8_t   *end;
-  int     cc, eoi, next, tel=0;
-  short   cLength;
 
-  char    *pos, *buffer;
+	GifTree *first = &GifRoot, *newNode, *curNode;
+	uint8_t   *end;
+	int     cc, eoi, next, tel=0;
+	short   cLength;
 
-  empty[0] = NULL;
-  need = 8;
+	char    *pos, *buffer;
 
-  nodeArray = empty;
-  memmove(++nodeArray, empty, 255*sizeof(GifTree **));
-  if (( buffer = (char *)malloc((BUFLEN+1)*sizeof(char))) == NULL ) {
-	fprintf(stderr,"No memory for writing");
-	exit(0);
+	empty[0] = NULL;
+	need = 8;
+
+	nodeArray = empty;
+	memmove(++nodeArray, empty, 255*sizeof(GifTree **));
+	if (( buffer = (char *)malloc((BUFLEN+1)*sizeof(char))) == NULL ) {
+		fprintf(stderr,"No memory for writing");
+		exit(0);
 	}
-  buffer++;
+	buffer++;
 
+	pos = buffer;
+	buffer[0] = 0x0;
 
-  pos = buffer;
-  buffer[0] = 0x0;
+	cc = (depth == 1) ? 0x4 : 1<<depth;
+	fputc((depth == 1) ? 2 : depth, fout);
+	eoi = cc+1;
+	next = cc+2;
 
-  cc = (depth == 1) ? 0x4 : 1<<depth;
-  fputc((depth == 1) ? 2 : depth, fout);
-  eoi = cc+1;
-  next = cc+2;
+	cLength = (depth == 1) ? 3 : depth+1;
 
-  cLength = (depth == 1) ? 3 : depth+1;
-
-  if (( topNode = baseNode = (GifTree *)malloc(sizeof(GifTree)*4094)) == NULL ) {
-	fprintf(stderr,"No memory for GIF-code tree");
-	exit(0);
+	if (( topNode = baseNode = (GifTree *)malloc(sizeof(GifTree)*4094)) == NULL ) {
+		fprintf(stderr,"No memory for GIF-code tree");
+		exit(0);
 	}
-  if (( nodeArray = first->node = (GifTree **)malloc(256*sizeof(GifTree *)*noOfArrays)) == NULL ) {
-	fprintf(stderr,"No memory for search nodes");
-	exit(0);
+
+	if (( nodeArray = first->node = (GifTree **)malloc(256*sizeof(GifTree *)*noOfArrays)) == NULL ) {
+		fprintf(stderr,"No memory for search nodes");
+		exit(0);
 	}
-  lastArray = nodeArray + ( 256*noOfArrays - cc);
-  ClearTree(cc, first);
 
-  pos = AddCodeToBuffer(cc, cLength, pos);
+	lastArray = nodeArray + ( 256*noOfArrays - cc);
+	ClearTree(cc, first);
 
-  end = pixels+siz;
-  curNode = first;
-  while(pixels < end) {
+	pos = AddCodeToBuffer(cc, cLength, pos);
 
-    if ( curNode->node[*pixels] != NULL ) {
-      curNode = curNode->node[*pixels];
-      tel++;
-      pixels++;
-      chainlen++;
-      continue;
-    } else if ( curNode->typ == SEARCH ) {
-      newNode = curNode->nxt;
-      while ( newNode->alt != NULL ) {
-	if ( newNode->ix == *pixels ) break;
-	newNode = newNode->alt;
-      }
-      if (newNode->ix == *pixels ) {
-    tel++;
-	pixels++;
-	chainlen++;
-	curNode = newNode;
-	continue;
-      }
-    }
+	end = pixels+siz;
+	curNode = first;
+	while(pixels < end) {
+
+		if ( curNode->node[*pixels] != NULL ) {
+			curNode = curNode->node[*pixels];
+			tel++;
+			pixels++;
+			chainlen++;
+			continue;
+		} else if ( curNode->typ == SEARCH ) {
+			newNode = curNode->nxt;
+			while ( newNode->alt != NULL ) {
+				if ( newNode->ix == *pixels ) break;
+				newNode = newNode->alt;
+			}
+			if (newNode->ix == *pixels ) {
+				tel++;
+				pixels++;
+				chainlen++;
+				curNode = newNode;
+				continue;
+			}
+		}
 
 /* ******************************************************
  * If there is no more thread to follow, we create a new node.  If the
@@ -566,65 +573,25 @@ static void GifEncode(FILE *fout, uint8_t *pixels, int depth, int siz) {
  */
 static void GifLoop(FILE *fout, unsigned int repeats) {
 
-  fputc(0x21, fout);
-  fputc(0xFF, fout);
-  fputc(0x0B, fout);
-  fputs("NETSCAPE2.0", fout);
+	fputc(0x21, fout);
+	fputc(0xFF, fout);
+	fputc(0x0B, fout);
+	fputs("NETSCAPE2.0", fout);
 
-  fputc(0x03, fout);
-  fputc(0x01, fout);
-  GifPutShort(repeats, fout); /* repeat count */
+	fputc(0x03, fout);
+	fputc(0x01, fout);
+	GifPutShort(repeats, fout); /* repeat count */
 
-  fputc(0x00, fout); /* terminator */
+	fputc(0x00, fout); /* terminator */
 
-  if(debugFlag) fprintf(stderr, "Wrote loop extension\n");
+	if(debugFlag) fprintf(stderr, "Wrote loop extension\n");
 }
 
 
 
-static long sq(uint8_t i,uint8_t j)
-{
-  return((i-j)*(i-j));
+static long sq(uint8_t i,uint8_t j) {
+	return((i-j)*(i-j));
 }
-
-
-  /* set global values */
-/*  global.trans.type = TRANS_NONE;
-  global.trans.valid = 0;
-  global.time = DEFAULT_TIME;
-  global.left = 0;
-  global.top = 0;
-  global.disposal = DEFAULT_DISPOSAL;
-*/
-
-	/* set Background color index */
-	/*
-	  GifBgcolor = atoi(argv[i++]) | 0x100; */
-   
-	/* Enable looping */
-	/*   loop = TRUE; */
-        /* loopcount = 0; */
-   
-	    /* Delay time in 1/100's of a second */
-	    /* global.time = atoi(argv[i++]); */
-	  
-	   /* Output file - send output to a given filename */
-	 
-           /* offset */
-	    /* SetOffset(argv[i]); */
-	   
-	    /* input file - file with a list of images */
-	 
-/*	      if(!count) GifReadFile(fout, gifFileName, 1);
-	      else       GifReadFile(fout, gifFileName, 0);
-	      count++;
-   
-              global.left = global.top = 0; */
-  
-/*
-   fputc(';', fout); # End of Gif file #
-   fclose(fout);
-*/
 
 static void ReadImageHeader(FILE *fp) {
   int tnum, i, flag;
@@ -921,39 +888,32 @@ static void WriteImageHeader(FILE *fout) {
 }
 
 
-
-/*
- * Read a Gif file.
- */
+/* time in 100th of seconds */
 void animate_gif(FILE *fout,char *fname,int firstImage,int Xoff,int Yoff,
-		 int delay_time,int loop_val) /* time in 100th of seconds */
-{
-  FILE *fp;
-  uint8_t *pix;
-  int i;
-  if ( (fp = fopen(fname, "rb")) == 0) {
-    fprintf(stderr, "Can't open %s for reading.\n", fname);
-    exit(0);
-  }
-     global.trans.type = TRANS_NONE;
-     global.trans.valid = 0;
-     global.time = delay_time;
+		 int delay_time,int loop_val) {
 
-     global.disposal = DEFAULT_DISPOSAL;
-    global.left = Xoff;
-    global.top = Yoff;
+	FILE *fp;
+	uint8_t *pix;
+	int i;
 
-    loop=loop_val;
-     /*   loop = TRUE; */
-           /* loopcount = 0; */
-   
-   
-  /*global.left = global.top = 0;*/
-   
-   
-   GifScreenHeader(fp, fout, firstImage);
+	if ( (fp = fopen(fname, "rb")) == 0) {
+		fprintf(stderr, "Can't open %s for reading.\n", fname);
+		exit(0);
+	}
 
-   /* read until , separator */
+	global.trans.type = TRANS_NONE;
+	global.trans.valid = 0;
+	global.time = delay_time;
+
+	global.disposal = DEFAULT_DISPOSAL;
+	global.left = Xoff;
+	global.top = Yoff;
+
+	loop=loop_val;
+
+	GifScreenHeader(fp, fout, firstImage);
+
+	/* read until , separator */
   do {
     switch ( i = Xgetc(fp)) {
       case ',':
@@ -1129,13 +1089,3 @@ alike:
 
   fclose(fp);
 }
-
-
-
-
-
-
-
-
-
-

@@ -16,6 +16,8 @@
 
 #include "default_font.h"
 #include "pcfont.h"
+#include "whirlgif.h"
+
 
 #define DEFAULT_TIMEDELAY 1 /* 1/100 of a second */
 #define DEFAULT_XSIZE    80
@@ -43,10 +45,6 @@ typedef struct {
 	int height;
 	int numchars;
 } vga_font;
-
-	/* Located in the "whirlgif.c" file */
-void animate_gif(FILE *fout,char *fname,int firstImage,int Xoff,int Yoff,
-	int delay_time,int loop_val); /* time in 100th of seconds */
 
 
 	/* If index=0, return the number of numbers */
