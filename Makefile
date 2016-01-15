@@ -40,8 +40,8 @@ install:	ansi2gif
 	cp ansi2png /usr/local/bin
 	cp ansi2eps /usr/local/bin
 	
-ansi2gif:	ansi2gif.o whirlgif.o gifdecod.o gifencod.o gifdecod.o pcfont.o
-	$(CC) $(LFLAGS) -o ansi2gif ansi2gif.o whirlgif.o gifencod.o gifdecod.o pcfont.o
+ansi2gif:	ansi2gif.o whirlgif.o pcfont.o
+	$(CC) $(LFLAGS) -o ansi2gif ansi2gif.o whirlgif.o pcfont.o
 	ln -f -s ansi2gif ansi2png
 	ln -f -s ansi2gif ansi2eps
 
@@ -50,12 +50,6 @@ pcfont.o:     pcfont.c
 
 whirlgif.o:	whirlgif.c
 	$(CC) $(CFLAGS) -c whirlgif.c
-	
-gifdecod.o:	gifdecod.c
-	$(CC) $(CFLAGS) -c gifdecod.c
-
-gifencod.o:	gifencod.c
-	$(CC) $(CFLAGS) -c gifencod.c
 
 ansi2gif.o:	ansi2gif.c
 	$(CC) $(CFLAGS) -c ansi2gif.c 
