@@ -6,6 +6,20 @@
  * Copyright (c) 1995,1996 Michael A. Mayer
  * All rights reserved.
  *
+ * gifdecode.c
+ *
+ * Copyright (c) 1997,1998 by Hans Dinsen-Hansen
+ * Copyright (c) 1995,1996 by Kevin Kadow
+ * All rights reserved.
+ *
+ * whirlgif.c
+ *
+ * Copyright (c) 1997,1998 by Hans Dinsen-Hansen (dino@danbbs.dk)
+ * Copyright (c) 1995,1996 by Kevin Kadow (kadokev@msg.net)
+ * Based on txtmerge.c
+ * Copyright (c) 1990,1991,1992,1993 by Mark Podlipec.
+ * All rights reserved.
+ *
  * This software may be freely copied, modified and redistributed
  * without fee provided that above copyright notices are preserved
  * intact on all copies and modified copies.
@@ -19,8 +33,9 @@
  * Compuserve Incorporated.  Gif(sm) is a Service Mark property of
  * Compuserve Incorporated.
  *
- *
- *           Implements GIF encoding by means of a tree search.
+ */
+
+/*           Implements GIF encoding by means of a tree search.
  *           --------------------------------------------------
  *
  *  - The string table may be thought of being stored in a "b-tree of
@@ -172,12 +187,6 @@ static int numBits, bits, picI, pass, step[5]={7,7,3,1,0}, start[5]= {0,4,2,1,0}
 static uint8_t *picture;
 
 
-
-
-
-
-
-
 /*
  * Set some defaults, these can be changed on the command line
  */
@@ -188,25 +197,20 @@ static int imagex = 0, imagey = 0, imagec = 0, GifBgcolor=0, count=0;
 
 /* global settings for offset, transparency */
 
-Global global;
+static Global global;
 
-GifColor gifGmap[256], gifCmap[256];
-GifScreenHdr globscrn, gifscrn;
+static GifColor gifGmap[256], gifCmap[256];
+static GifScreenHdr globscrn, gifscrn;
 
-GifImageHdr gifimage, gifimageold;
+static GifImageHdr gifimage, gifimageold;
 
-extern uint32_t gifBlockSize, gifMask[], gifPtwo[];
-uint8_t *pixold=NULL;
-
-char gifFileName[BIGSTRING];
-FILE *ff;
-
+static uint8_t *pixold=NULL;
 
 
 #define BLOKLEN 255
 #define BUFLEN 1000
 
-uint8_t Xgetc(FILE *fin) {
+static uint8_t Xgetc(FILE *fin) {
 
 	int i;
 	if ( ( i = fgetc(fin) ) == EOF ) {
@@ -218,18 +222,18 @@ uint8_t Xgetc(FILE *fin) {
 
 
 
-void GifPutShort(int i, FILE *fout) {
+static void GifPutShort(int i, FILE *fout) {
 	fputc(i&0xff, fout);
 	fputc(i>>8, fout);
 }
 
-unsigned short GifGetShort(FILE *fin) {
+static unsigned short GifGetShort(FILE *fin) {
 	return (Xgetc(fin) | Xgetc(fin)<<8);
 }
 
 
 
-void ClearTree(int cc, GifTree *root) {
+static void ClearTree(int cc, GifTree *root) {
 
 	int i;
 	GifTree *newNode, **xx;
@@ -266,10 +270,7 @@ void ClearTree(int cc, GifTree *root) {
 /*
  * read Gif header
  */
-void GifScreenHeader(fp, fout, firstTime)
-	    FILE *fp, *fout;
-	    int firstTime;
-{
+static void GifScreenHeader(FILE *fp, FILE *fout, int firstTime) {
   int temp, i;
 
   for(i = 0; i < 6; i++) {
@@ -352,7 +353,7 @@ void GifScreenHeader(fp, fout, firstTime)
 }
 
 
-char *AddCodeToBuffer(int code, short n, char *buf) {
+static char *AddCodeToBuffer(int code, short n, char *buf) {
 
 	int    mask;
 
@@ -384,9 +385,8 @@ char *AddCodeToBuffer(int code, short n, char *buf) {
 }
 
 
-void GifEncode(fout, pixels, depth, siz)
-FILE *fout; uint8_t *pixels; int depth, siz;
-{
+static void GifEncode(FILE *fout, uint8_t *pixels, int depth, int siz) {
+
    
   GifTree *first = &GifRoot, *newNode, *curNode;
   uint8_t   *end;
@@ -561,76 +561,10 @@ FILE *fout; uint8_t *pixels; int depth, siz;
 
 }
 
-
-
-/*
- * whirlgif.c
- *
- * Copyright (c) 1997,1998 by Hans Dinsen-Hansen (dino@danbbs.dk)
- * Copyright (c) 1995,1996 by Kevin Kadow (kadokev@msg.net)
- * Based on txtmerge.c
- * Copyright (c) 1990,1991,1992,1993 by Mark Podlipec.
- * All rights reserved.
- *
- * This software may be freely copied, modified and redistributed
- * without fee provided that above copyright notices are preserved
- * intact on all copies and modified copies.
- *
- * There is no warranty or other guarantee of fitness of this software.
- * It is provided solely "as is". The author(s) disclaim(s) all
- * responsibility and liability with respect to this software's usage
- * or its effect upon hardware or computer systems.
- *
- * The Graphics Interchange format (c) is the Copyright property of
- * Compuserve Incorporated.  Gif(sm) is a Service Mark property of
- * Compuserve Incorporated.
- *
- */
-/*
- * Description:
- *
- * This program reads in a sequence of single-image Gif format files and
- * outputs a single multi-image Gif file, suitable for use as an animation.
- *
- * TODO:
- *
- * More options for dealing with the colormap
- *
- */
-
-/*
- * Rev 3.02    ??Oct9? Hans Dinsen-Hansen
- * Loop. Verbose -> DEBUG. Further minimizing.
- * Rev 3.01      Oct98 Hans Dinsen-Hansen
- * Never published.  Various experiments with Windows versions.
- * Rev 3.00    29jul98 Hans Dinsen-Hansen
- * Gif-repacking; unification of color map; only output diff.
- * Rev 2.02    09Sep97 Hans Dinsen-Hansen
- * Gif89a input; use global colormap whenever possible; background index
- * Rev 2.01    31Aug96 Kevin Kadow
- * disposal
- * Rev 2.00    05Feb96 Kevin Kadow
- * transparency, gif comments,
- * Rev 1.10    29Jan96 Kevin Kadow
- * first release of whirlgif
- *
- * txtmerge:
- * Rev 1.01    08Jan92 Mark Podlipec
- * use all colormaps, not just 1st.
- * Rev 1.00    23Jul91 Mark Podlipec
- * creation
- *
- *
- */
-
-
 /*
  * Write a Netscape loop marker.
  */
-void GifLoop(fout, repeats)
-	FILE *fout;
-	unsigned int repeats;
-{
+static void GifLoop(FILE *fout, unsigned int repeats) {
 
   fputc(0x21, fout);
   fputc(0xFF, fout);
@@ -648,7 +582,7 @@ void GifLoop(fout, repeats)
 
 
 
-long sq(uint8_t i,uint8_t j)
+static long sq(uint8_t i,uint8_t j)
 {
   return((i-j)*(i-j));
 }
@@ -692,9 +626,7 @@ long sq(uint8_t i,uint8_t j)
    fclose(fout);
 */
 
-void ReadImageHeader(fp)
-	       FILE *fp;
-{
+static void ReadImageHeader(FILE *fp) {
   int tnum, i, flag;
 
   gifimage.left  = GifGetShort(fp);
@@ -753,8 +685,7 @@ void ReadImageHeader(fp)
 /*
  * clear and initialize string table
  */
-void GifClearTable()
-{
+static void GifClearTable(void) {
   int maxi, i;
   if (debugFlag) fprintf(stderr, "Clearing Table...\n");
   for(i = 0; i < MAXVAL; i++) table[i].valid = 0;
@@ -773,9 +704,9 @@ void GifClearTable()
   codeSize = rootCodeSize+1;
 }
 
-uint32_t GifGetCode(fp) /* get code depending of current LZW code size */
-	    FILE *fp;
-{
+/* get code depending of current LZW code size */
+static uint32_t GifGetCode(FILE *fp) {
+
   uint32_t code;
   int tmp;
 
@@ -810,11 +741,7 @@ uint32_t GifGetCode(fp) /* get code depending of current LZW code size */
   return(code);
 }
 
-uint8_t *GifSendData(index, pix, gifimage)
-	int index;
-	uint8_t *pix;
-	GifImageHdr gifimage;
-{
+static uint8_t *GifSendData(int index, uint8_t *pix, GifImageHdr gifimage) {
   int i, j, interlaced, imgwidth, imgheight;
   interlaced = gifimage.i;
   imgwidth = gifimage.width;
@@ -851,9 +778,8 @@ uint8_t *GifSendData(index, pix, gifimage)
   return(pix);
 }
 
-void GifGetNextEntry(fp)
-    FILE                *fp;
-{
+static void GifGetNextEntry(FILE *fp) {
+
    /* table walk to empty spot */
   while( (table[nextab].valid == 1) &&(nextab < MAXVAL) ) nextab++;
   /*
@@ -875,9 +801,8 @@ void GifGetNextEntry(fp)
 
 }
 
-void GifAddToTable(body, next, index)
-       uint32_t body, next, index;
-{
+static void GifAddToTable(int32_t body, int32_t next, int32_t index) {
+
   if (body > MAXVAL || next > MAXVAL || index > MAXVAL ) fprintf(stderr, "Error body=%d, next=%d, index=%d, \n", index,index,index);
   else {
     table[index].valid = 1;
@@ -889,11 +814,7 @@ void GifAddToTable(body, next, index)
 
 
 
-void GifDecode(fp, pix, gifimage)
-	FILE  *fp;
-	uint8_t *pix;
-	GifImageHdr gifimage;
-{
+static void GifDecode(FILE  *fp, uint8_t *pix, GifImageHdr gifimage) {
   uint32_t code, old;
   picture=pix;
   picI = pass = bits = 0;
@@ -940,9 +861,7 @@ void GifDecode(fp, pix, gifimage)
   return;
 }
 
-void WriteImageHeader(fout)
-		FILE *fout;
-{
+static void WriteImageHeader(FILE *fout) {
   int temp, i, flag;
   /* compute a Gif_GCL */
 
@@ -1218,98 +1137,5 @@ alike:
 
 
 
-
-void GifComment(fout, string)
-	   FILE *fout;
-	   char *string;
-{
-  int len;
-
-  if( (len = strlen(string)) > 254 ) fprintf(stderr,
-		 "GifComment: String too long ; dropped\n");
-  else if ( len > 0 ) {
-    /* Undocumented feature:
-       Empty comment string means no comment block in outfile */
-    fputc(0x21, fout);
-    fputc(0xFE, fout);
-    fputc(len, fout);
-    fputs(string, fout);
-    fputc(0, fout);
-  }
-  return;
-}
-
-
-
-void CalcTrans(string)
-	  char *string;
-{
-  if(string[0] != '#') {
-    global.trans.type = TRANS_MAP;
-    global.trans.map = atoi(string);
-    global.trans.valid = 1;
-  }
-  else {
-    /* it's an RGB value */
-    int r, g, b;
-    string++;
-    if (debugFlag > 1) fprintf(stderr, "String is %s\n", string);
-    if(3 == sscanf(string, "%2x%2x%2x", &r, &g, &b)) {
-      global.trans.red = r;
-      global.trans.green = g;
-      global.trans.blue = b;
-      global.trans.type = TRANS_RGB;
-      global.trans.valid = 0;
-      if(debugFlag > 1)
-	fprintf(stderr, "Transparent RGB=(%x,%x,%x) = (%d,%d,%d)\n",
-	    r, g, b, r, g, b);
-    }
-  }
-  if(debugFlag > 1)
-       fprintf(stderr, "DEBUG:CalcTrans is %d\n", global.trans.type);
-}
-
-
-
-
-
-
-/*
- * gifdecode.c
- *
- * Copyright (c) 1997,1998 by Hans Dinsen-Hansen
- * Copyright (c) 1995,1996 by Kevin Kadow
- * All rights reserved.
- *
- * This software may be freely copied, modified and redistributed
- * without fee provided that this copyright notice is preserved
- * intact on all copies and modified copies.
- *
- * There is no warranty or other guarantee of fitness of this software.
- * It is provided solely "as is". The author(s) disclaim(s) all
- * responsibility and liability with respect to this software's usage
- * or its effect upon hardware or computer systems.
- *
- * The Graphics Interchange format (c) is the Copyright property of
- * Compuserve Incorporated.  Gif(sm) is a Service Mark property of
- * Compuserve Incorporated.
- *
- */
-
-//#include "whirlgif.h"
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*CODE*/
 
 
