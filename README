@@ -1,4 +1,4 @@
-*****************  ansi2gif version 0.10.0  ***************
+*****************  ansi2gif version 0.11.0  ***************
 *****************                           ***************
                       by Vince Weaver
                          vince _at_ deater.net
@@ -38,12 +38,8 @@ HOW IT WORKS
      I used Tom Boutell's [http://www.boutell.com] excellent "gd"
      gif library to make the basis gifs.
      
-     I used a slightly modified version of the "whirlgif" utility to 
-     do the animations.  [http://www.danbbs.dk/~dino/whirlgif]
-
-     A temporary file is created in /tmp/ansi2gif_%i.gif [where %i is
-     the pid of ansi2gif] in which all the transitory gifs for an
-     animation are made. (NOTE TO SELF.. INSECURE.  FIX THIS)
+     It originally used a slightly modified version of the "whirlgif" 
+     utility to do animated gifs, but now libgd does that too.
 
      The fonts used are standard "vga" fonts.  Basically they are just
      4k files holding a set of 256x8x16 data, where there are 256 characters,
@@ -66,10 +62,10 @@ INSTALLING
     Now install ansi2gif
     
     Uncompress the file 
-       tar -xzvf ansi2gif-0.10.0.tar.gz
+       tar -xzvf ansi2gif-0.11.0.tar.gz
        
     Enter the created directory
-       cd ansi2gif-0.10.0
+       cd ansi2gif-0.11.0
        
     The Makefile should be OK.  If you have "gd" installed in a 
     non-standard directory, you might have to edit the makefile to
@@ -132,11 +128,10 @@ THANKS
 -------------------------------------------------------------------------
        Thanks to Tom Boutell, author of the "gd" library
        Thanks to the various whirlgif authors
-              http://www.danbbs.dk/~dino/whirlgif/
 
        Also special thanks to my lovely wife.
 
 
 -------
-Vince Weaver (6 January 2014)
+Vince Weaver (15 January 2016)
 vince _at_ deater.net

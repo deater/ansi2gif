@@ -84,3 +84,11 @@ RELEASE 0.9.14
 + Support 24-bit color ANS (although approximated on png/gif)
 
 RELEASE 0.10.0
+
+January 2016
++ Merge in a change from github to make animations faster
++ Added a movie mode to help in making movie files
++ Re-write animation code to use libgd for everything, drop
+	the old whirlgif/gifencode files
+
+RELEASE 0.11.0
