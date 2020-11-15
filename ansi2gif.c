@@ -740,6 +740,7 @@ static void gif_the_text(int animate, int blink,
 	FILE *movie_f;
 	char movie_path[BUFSIZ];
 	char movie_filename[BUFSIZ];
+	int line=1;
 
 	/* Allocate space for screen and attributes */
 	screen=calloc(x_size*y_size,sizeof(unsigned char));
@@ -977,7 +978,7 @@ static void gif_the_text(int animate, int blink,
 
 				/* Set screen mode */
 				case 'h':
-					fprintf(stderr,"Warning!  Screen Mode Setting not Supported.\n\n"); 
+					fprintf(stderr,"Warning!  Screen Mode Setting not Supported (line %d).\n\n",line);
 					break;
 
 				/* note, look for [= code */
@@ -997,6 +998,7 @@ static void gif_the_text(int animate, int blink,
 			if (temp_char=='\n') {
 				x_position=1;
 				y_position++;
+				line++;
 			}
 			/* Tab */
 			else if (temp_char=='\t') {
@@ -1004,7 +1006,9 @@ static void gif_the_text(int animate, int blink,
 			}
 			/* Skip carriage returns, as most */
 			/* ANSIs are from DOS            */
-			else if (temp_char=='\r');
+			else if (temp_char=='\r') {
+				/* do nothing */
+			}
 			else {
 				/* Where is the best place to check for wrapping? */
 				if (x_position>x_size) {
@@ -1148,8 +1152,9 @@ static void gif_the_text(int animate, int blink,
 	}
 
 	if ((backtrack) && !(animate||create_movie)) {
-		fprintf(stderr,"Warning!  The cursor moved backwards and animated output was not selected.\n"
-			       "          For proper output, you might want to try again with --animate\n\n"); 
+		fprintf(stderr, "Warning!  (Line %d)\n"
+				"          The cursor moved backwards and animated output was not selected.\n"
+			        "          For proper output, you might want to try again with --animate\n\n",line);
 	}
 
 	if ((use_blink)&&(!blink)) {
