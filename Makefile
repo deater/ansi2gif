@@ -19,7 +19,7 @@ CC = gcc
 #Standard compiler and library options
 
 CFLAGS = $(GD_CFLAGS) -Wall -O2 -g
- 
+
 LFLAGS = $(GD_LFLAGS) -lgd -lm
 
 
@@ -41,7 +41,7 @@ install:	ansi2gif
 	cp ansi2eps /usr/local/bin
 
 ansi2gif:	ansi2gif.o pcfont.o
-	$(CC) $(LFLAGS) -o ansi2gif ansi2gif.o pcfont.o
+	$(CC) -o ansi2gif ansi2gif.o pcfont.o $(LFLAGS)
 	ln -f -s ansi2gif ansi2png
 	ln -f -s ansi2gif ansi2eps
 
