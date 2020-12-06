@@ -1,3 +1,5 @@
+VGA font is actually 9-bits wide
+
 + a default font with IBM extended ASCII codes more suitable for ANSI art.
 + color-map settable from command line
 + automatic sizing of output gif based on ansi

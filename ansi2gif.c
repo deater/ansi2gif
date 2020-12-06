@@ -35,6 +35,7 @@
 #define OUTPUT_GIF 1
 #define OUTPUT_EPS 2
 #define OUTPUT_MP4 3
+#define OUTPUT_CGA 4
 
 /* Attributes */
 #define BLINK		1
@@ -197,7 +198,10 @@ static void setup_eps_256colors(void) {
 
 static void setup_256colors(int output_type) {
 
-	if (output_type==OUTPUT_EPS) {
+	if (output_type==OUTPUT_CGA) {
+
+	}
+	else if (output_type==OUTPUT_EPS) {
 		setup_eps_256colors();
 	}
 	else {
@@ -211,7 +215,10 @@ static void setup_256colors(int output_type) {
 
 static int map_24bitcolor(int output_type, int r, int g, int b) {
 
-	if (output_type==OUTPUT_EPS) {
+	if (output_type==OUTPUT_CGA) {
+		return 0;
+	}
+	else if (output_type==OUTPUT_EPS) {
 		return (r<<16)+(g<<8)+b;
 	}
 	else {
@@ -286,6 +293,27 @@ static void setup_eps(FILE *out_f,int x_size, int y_size) {
 	fprintf(out_f,"fill\n");
 }
 
+static void setup_cga(FILE *outf, int x_size,int y_size) {
+
+	ansi_color[ANSI_BLACK] = 0;
+	ansi_color[ANSI_BLUE] = 1;
+	ansi_color[ANSI_GREEN] = 2;
+	ansi_color[ANSI_CYAN] = 3;
+	ansi_color[ANSI_RED] = 4;
+	ansi_color[ANSI_PURPLE] = 5;
+	ansi_color[ANSI_BROWN] = 6;
+	ansi_color[ANSI_GREY] = 7;
+	ansi_color[ANSI_DARKGREY] = 8;
+	ansi_color[ANSI_BRIGHTBLUE] = 9;
+	ansi_color[ANSI_BRIGHTGREEN]= 10;
+	ansi_color[ANSI_BRIGHTCYAN]= 11;
+	ansi_color[ANSI_BRIGHTRED]= 12;
+	ansi_color[ANSI_PINK]= 13;
+	ansi_color[ANSI_YELLOW]= 14;
+	ansi_color[ANSI_WHITE]=15;
+
+}
+
 static void int_to_triple(int val,FILE *out_f) {
 
 	float r,g,b;
@@ -297,6 +325,30 @@ static void int_to_triple(int val,FILE *out_f) {
 	fprintf(out_f,"%.2f %.2f %.2f",r,g,b);
 }
 
+
+static void display_cga(FILE *out_f,int output_type,int x_size,int y_size) {
+
+	int x,y;
+	int ch,color;
+
+	for(y=0;y<y_size;y++) {
+		for(x=0;x<x_size;x++) {
+			ch=screen[x+(y*x_size)];
+			printf("x=%d xs=%d y=%d ys=%d back_color=%d fore_color=%d\n",
+				x,x_size,y,y_size,back_colors[x+(y*x_size)],
+					fore_colors[x+(y*x_size)]);
+
+			color=(back_colors[x+(y*x_size)]<<4)|
+				    (fore_colors[x+(y*x_size)]&0xf);
+			fputc(ch,out_f);
+			fputc(color,out_f);
+		}
+	}
+}
+
+static void finish_cga(FILE *out_f) {
+
+}
 
 static void display_eps(FILE *out_f,int output_type,int x_size,int y_size) {
 
@@ -378,6 +430,10 @@ static void display_eps(FILE *out_f,int output_type,int x_size,int y_size) {
 	}
 }
 
+static void finish_eps(FILE *out_f) {
+
+}
+
 
 static void display_gd(FILE *out_f,int output_type,int x_size,int y_size) {
 
@@ -419,9 +475,7 @@ static void finish_gd(FILE *out_f) {
 }
 
 
-static void finish_eps(FILE *out_f) {
 
-}
 
 static int use_blink=0,invisible=0;
 static int fore_color=7,back_color=0;
@@ -753,7 +807,10 @@ static void gif_the_text(int animate, int blink,
 	}
 
 	/* Setup the various output methods */
-	if (output_type==OUTPUT_EPS) {
+	if (output_type==OUTPUT_CGA) {
+		setup_cga(out_f,x_size,y_size);
+	}
+	else if (output_type==OUTPUT_EPS) {
 		setup_eps(out_f,x_size,y_size);
 	}
 	else {
@@ -1086,7 +1143,10 @@ static void gif_the_text(int animate, int blink,
 	/* If not animating, draw the final picture */
 	if (!(animate||blink)) {
 
-		if (output_type==OUTPUT_EPS) {
+		if (output_type==OUTPUT_CGA) {
+			display_cga(out_f,output_type,x_size,y_size);
+		}
+		else if (output_type==OUTPUT_EPS) {
 			display_eps(out_f,output_type,x_size,y_size);
 		}
 		else {
@@ -1182,7 +1242,10 @@ static void gif_the_text(int animate, int blink,
 
 	}
 
-	if (output_type==OUTPUT_EPS) {
+	if (output_type==OUTPUT_CGA) {
+		finish_cga(out_f);
+	}
+	else if (output_type==OUTPUT_EPS) {
 		finish_eps(out_f);
 	}
 	else {
@@ -1478,6 +1541,7 @@ int main(int argc, char **argv) {
 		{"version",0,NULL,'v'},
 		{"xsize",1,NULL,'x'},
 		{"ysize",1,NULL,'y'},
+		{"cga",1,NULL,'z'},
 		{0,0,0,0}
 	};
 
@@ -1492,7 +1556,7 @@ int main(int argc, char **argv) {
 	/*--  PARSE COMMAND LINE PARAMATERS --*/
 	opterr=0;
 	while ((c = getopt_long (argc, argv,
-			"abc:ref:ghpt:vx:y:",
+			"abc:ref:ghpt:vx:y:z",
 			long_options,&option_index))!=-1) {
 		switch (c) {
 		case 'a':	animate=1;
@@ -1549,6 +1613,8 @@ int main(int argc, char **argv) {
 					}
 				}
 				break;
+		case 'z':	output_type=OUTPUT_CGA;
+				break;
 		default :	fprintf(stderr,"\nError! Bad command line option!\n\n"); 
 				exit(5);
 		}
@@ -1598,6 +1664,9 @@ int main(int argc, char **argv) {
 			}
 			if (!strcmp(output_name+(strlen(output_name)-4),".mpg")) {
 				output_type=OUTPUT_MP4;
+			}
+			if (!strcmp(output_name+(strlen(output_name)-4),".cga")) {
+				output_type=OUTPUT_CGA;
 			}
 
 		}
